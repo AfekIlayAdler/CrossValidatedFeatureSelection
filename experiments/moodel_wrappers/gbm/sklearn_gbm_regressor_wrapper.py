@@ -1,4 +1,4 @@
-from numpy import mean, square, array, nan
+from numpy import mean, square, array, nan, sqrt
 from numpy.random import permutation
 from pandas import Series
 from sklearn.ensemble import GradientBoostingRegressor
@@ -58,3 +58,17 @@ class SklearnGbmRegressorWrapper:
         fi = get_shap_values(self.predictor, X, self.x_train_cols).to_dict()
         fi = Series(self.group_fi(fi))
         return fi
+
+    def compute_rmse(self, X, y):
+        return sqrt(mean(square(y - self.predictor.predict(X))))
+
+    def n_leaves_per_tree(self):
+        n_leaves_per_tree = Series({i: tree[0].tree_.n_leaves for i, tree in enumerate(self.predictor.estimators_)})
+        n_leaves_per_tree = n_leaves_per_tree[n_leaves_per_tree > 1]
+        return n_leaves_per_tree
+
+    def get_n_trees(self):
+        return self.n_leaves_per_tree().sum()
+
+    def get_n_leaves(self):
+        return self.n_leaves_per_tree().size

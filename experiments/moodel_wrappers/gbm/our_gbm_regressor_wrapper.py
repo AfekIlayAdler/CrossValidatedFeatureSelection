@@ -1,4 +1,4 @@
-from numpy import mean, square, array, nan
+from numpy import mean, square, array, nan, sqrt
 from numpy.random import permutation
 from pandas import Series
 
@@ -40,3 +40,12 @@ class OurGbmRegressorWrapper:
 
     def compute_fi_shap(self, X, y):
         return Series({col: nan for col in self.x_train_cols})
+
+    def compute_rmse(self, X, y):
+        return sqrt(mean(square(y - self.predictor.predict(X))))
+
+    def get_n_trees(self):
+        return self.predictor.n_trees
+
+    def get_n_leaves(self):
+        return sum([tree.n_leaves for tree in self.predictor.trees])

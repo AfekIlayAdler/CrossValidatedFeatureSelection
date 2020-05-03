@@ -1,11 +1,128 @@
+from collections import OrderedDict
+
 import lightgbm as lgb
-from numpy import mean, square, array
+from numpy import mean, square, array, sqrt
 from numpy.random import permutation
-from pandas import Series
+from pandas import Series, DataFrame
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
 from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values
 from experiments.utils import get_categorical_col_indexes, get_categorical_colnames, get_non_categorical_colnames
+
+"""
+not released yet.
+taken from https://github.com/microsoft/LightGBM/blob/master/python-package/lightgbm/basic.py
+"""
+
+
+def trees_to_dataframe(self):
+    """Parse the fitted model and return in an easy-to-read pandas DataFrame.
+    Returns
+    -------
+    result : pandas DataFrame
+        Returns a pandas DataFrame of the parsed model.
+    """
+
+    def _is_split_node(tree):
+        return 'split_index' in tree.keys()
+
+    def create_node_record(tree, node_depth=1, tree_index=None,
+                           feature_names=None, parent_node=None):
+
+        def _get_node_index(tree, tree_index):
+            tree_num = str(tree_index) + '-' if tree_index is not None else ''
+            is_split = _is_split_node(tree)
+            node_type = 'S' if is_split else 'L'
+            # if a single node tree it won't have `leaf_index` so return 0
+            node_num = str(tree.get('split_index' if is_split else 'leaf_index', 0))
+            return tree_num + node_type + node_num
+
+        def _get_split_feature(tree, feature_names):
+            if _is_split_node(tree):
+                if feature_names is not None:
+                    feature_name = feature_names[tree['split_feature']]
+                else:
+                    feature_name = tree['split_feature']
+            else:
+                feature_name = None
+            return feature_name
+
+        def _is_single_node_tree(tree):
+            return set(tree.keys()) == {'leaf_value'}
+
+        # Create the node record, and populate universal data members
+        node = OrderedDict()
+        node['tree_index'] = tree_index
+        node['node_depth'] = node_depth
+        node['node_index'] = _get_node_index(tree, tree_index)
+        node['left_child'] = None
+        node['right_child'] = None
+        node['parent_index'] = parent_node
+        node['split_feature'] = _get_split_feature(tree, feature_names)
+        node['split_gain'] = None
+        node['threshold'] = None
+        node['decision_type'] = None
+        node['missing_direction'] = None
+        node['missing_type'] = None
+        node['value'] = None
+        node['weight'] = None
+        node['count'] = None
+
+        # Update values to reflect node type (leaf or split)
+        if _is_split_node(tree):
+            node['left_child'] = _get_node_index(tree['left_child'], tree_index)
+            node['right_child'] = _get_node_index(tree['right_child'], tree_index)
+            node['split_gain'] = tree['split_gain']
+            node['threshold'] = tree['threshold']
+            node['decision_type'] = tree['decision_type']
+            node['missing_direction'] = 'left' if tree['default_left'] else 'right'
+            node['missing_type'] = tree['missing_type']
+            node['value'] = tree['internal_value']
+            node['weight'] = tree['internal_weight']
+            node['count'] = tree['internal_count']
+        else:
+            node['value'] = tree['leaf_value']
+            if not _is_single_node_tree(tree):
+                node['weight'] = tree['leaf_weight']
+                node['count'] = tree['leaf_count']
+
+        return node
+
+    def tree_dict_to_node_list(tree, node_depth=1, tree_index=None,
+                               feature_names=None, parent_node=None):
+
+        node = create_node_record(tree,
+                                  node_depth=node_depth,
+                                  tree_index=tree_index,
+                                  feature_names=feature_names,
+                                  parent_node=parent_node)
+
+        res = [node]
+
+        if _is_split_node(tree):
+            # traverse the next level of the tree
+            children = ['left_child', 'right_child']
+            for child in children:
+                subtree_list = tree_dict_to_node_list(
+                    tree[child],
+                    node_depth=node_depth + 1,
+                    tree_index=tree_index,
+                    feature_names=feature_names,
+                    parent_node=node['node_index'])
+                # In tree format, "subtree_list" is a list of node records (dicts),
+                # and we add node to the list.
+                res.extend(subtree_list)
+        return res
+
+    model_dict = self.dump_model()
+    feature_names = model_dict['feature_names']
+    model_list = []
+    for tree in model_dict['tree_info']:
+        model_list.extend(tree_dict_to_node_list(tree['tree_structure'],
+                                                 tree_index=tree['tree_index'],
+                                                 feature_names=feature_names))
+
+    return DataFrame(model_list, columns=model_list[0].keys())
 
 
 class LgbmGbmRegressorWrapper:
@@ -43,7 +160,7 @@ class LgbmGbmRegressorWrapper:
 
     def compute_fi_gain(self):
         # TODO: fix it
-        fi = dict(zip(self.x_train_cols ,self.predictor.feature_importances_))
+        fi = dict(zip(self.x_train_cols, self.predictor.feature_importances_))
         fi = Series(self.group_fi(fi))
         return normalize_series(fi)
 
@@ -55,7 +172,7 @@ class LgbmGbmRegressorWrapper:
             permutated_x = X.copy()
             random_feature_mse = []
             for i in range(N_PERMUTATIONS):
-                permutated_x[col] = Series(permutation(permutated_x[col]), dtype = X[col].dtype)
+                permutated_x[col] = Series(permutation(permutated_x[col]), dtype=X[col].dtype)
                 random_feature_mse.append(mean(square(y - self.predictor.predict(permutated_x))))
             results[col] = mean(array(random_feature_mse)) - mse
         fi = Series(self.group_fi(results))
@@ -66,3 +183,19 @@ class LgbmGbmRegressorWrapper:
         fi = get_shap_values(self.predictor, X, self.x_train_cols).to_dict()
         fi = Series(self.group_fi(fi))
         return fi
+
+    def compute_rmse(self, X, y):
+        return sqrt(mean(square(y - self.predictor.predict(X))))
+
+    def n_leaves_per_tree(self):
+        df = trees_to_dataframe(self.predictor.booster_)
+        leaves_per_tree = df[df['split_feature'].isna()]['tree_index']
+        n_leaves_per_tree = leaves_per_tree.value_counts()
+        n_leaves_per_tree = n_leaves_per_tree[n_leaves_per_tree > 1]
+        return n_leaves_per_tree
+
+    def get_n_trees(self):
+        return self.n_leaves_per_tree().sum()
+
+    def get_n_leaves(self):
+        return self.n_leaves_per_tree().size

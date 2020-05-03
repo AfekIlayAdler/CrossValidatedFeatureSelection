@@ -1,5 +1,5 @@
 import xgboost as xgb
-from numpy import mean, square, array
+from numpy import mean, square, array, sqrt
 from numpy.random import permutation
 from pandas import Series
 
@@ -63,3 +63,19 @@ class XgboostGbmRegressorWrapper:
         fi = get_shap_values(self.predictor, X, self.x_train_cols).to_dict()
         fi = Series(self.group_fi(fi))
         return fi
+
+    def compute_rmse(self, X, y):
+        return sqrt(mean(square(y - self.predictor.predict(xgb.DMatrix(X)))))
+
+    def n_leaves_per_tree(self):
+        df = self.predictor.trees_to_dataframe()
+        leaves_per_tree = df[df['Feature'] == 'Leaf']['Tree']
+        n_leaves_per_tree = leaves_per_tree.value_counts()
+        n_leaves_per_tree = n_leaves_per_tree[n_leaves_per_tree > 1]
+        return n_leaves_per_tree
+
+    def get_n_trees(self):
+        return self.n_leaves_per_tree().sum()
+
+    def get_n_leaves(self):
+        return self.n_leaves_per_tree().size

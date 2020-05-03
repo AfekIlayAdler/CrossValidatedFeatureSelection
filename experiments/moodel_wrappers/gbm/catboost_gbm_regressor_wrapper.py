@@ -1,5 +1,5 @@
 from catboost import CatBoostRegressor, Pool
-from numpy import mean, square, array
+from numpy import mean, square, array, sqrt
 from numpy.random import permutation
 from pandas import Series
 
@@ -15,9 +15,9 @@ class CatboostGbmRegressorWrapper:
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.variant = variant
         self.predictor = CatBoostRegressor(iterations=n_estimators,
-                                     depth=max_depth,
-                                     learning_rate=learning_rate,
-                                     loss_function='RMSE', logging_level='Silent')
+                                           depth=max_depth,
+                                           learning_rate=learning_rate,
+                                           loss_function='RMSE', logging_level='Silent')
 
         self.x_train_cols = None
 
@@ -53,3 +53,12 @@ class CatboostGbmRegressorWrapper:
         # TODO: fix it
         pool = Pool(X, y, cat_features=self.cat_col_indexes)
         return get_shap_values(self.predictor, pool, self.x_train_cols)
+
+    def compute_rmse(self, X, y):
+        return sqrt(mean(square(y - self.predictor.predict(self.get_pool(X)))))
+
+    def get_n_trees(self):
+        return self.predictor.tree_count_
+
+    def get_n_leaves(self):
+        return self.predictor.tree_count_*(2**self.predictor._init_params['depth'])

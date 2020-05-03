@@ -21,7 +21,7 @@ def regression_impurity(y: Series):
 
 
 def classification_impurity(y: Series):
-    p = np.sum(y)/y.size
+    p = sum(y)/y.size
     n = y.size
     return n * p * (1 - p)
 

@@ -1,5 +1,5 @@
-from numba import njit, prange, jit
-from numpy import argmin, float64, zeros, inf, int32, int64
+from numba import njit, prange
+from numpy import argmin, float64, zeros, inf, int64
 
 from .gradients import compute_hist_sum
 

@@ -1,5 +1,6 @@
 import multiprocessing
 
+from numpy import arange
 from pandas import Series, DataFrame
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
@@ -12,6 +13,11 @@ def get_x_y():
     data = load_boston()
     X = DataFrame(data['data'], columns=data['feature_names'])
     y = Series(data['target'])
+    """
+    add cat index
+    """
+    # X['index'] = arange(X.shape[0])
+    # X['index'] = X['index'].astype('category')
     return X, y
 
 
@@ -19,8 +25,8 @@ def worker(model_name, variant, fast):
     exp_name = F"{model_name}_{variant}.csv"
     dir = RESULTS_DIR / model_name
     exp_results_path = dir / exp_name
-    # if exp_results_path.exists():
-    #    return
+    if exp_results_path.exists():
+       return
     X, y = get_x_y()
     X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                         test_size=VAL_RATIO, random_state=42)

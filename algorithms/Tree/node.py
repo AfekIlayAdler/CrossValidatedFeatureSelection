@@ -51,7 +51,6 @@ class CategoricalBinaryNode(InternalNode):
         super().__init__(n_examples, split_purity, field)
         self.left_values = set(left_values)
 
-
     def get_child(self, value):
         if value in self.left_values:
             return self.left

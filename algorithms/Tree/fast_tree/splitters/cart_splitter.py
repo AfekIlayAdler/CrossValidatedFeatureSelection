@@ -2,7 +2,8 @@ import numpy as np
 from numba import njit
 
 
-@njit(cache = True)
+# todo : add if right count == 0: break
+@njit(cache=True)
 def regression_get_split(grad, grad_counts):
     left_sum, left_counts, left_sum_squares = 0., 0., 0.
     return_left_mean, return_right_mean = 0., 0.
@@ -24,11 +25,11 @@ def regression_get_split(grad, grad_counts):
         impurity = left_var + right_var
         if impurity < best_impurity:
             best_impurity, split_index = impurity, i
-            return_left_mean, return_right_mean = left_mean , right_mean
+            return_left_mean, return_right_mean = left_mean, right_mean
     return split_index, best_impurity, return_left_mean, return_right_mean
 
 
-@njit(cache = True)
+@njit(cache=True)
 def classification_get_split(grad, grad_counts):
     # we can look at left sum for example as number of success in the left split
     left_sum, left_counts = 0., 0.
@@ -49,5 +50,5 @@ def classification_get_split(grad, grad_counts):
         impurity = left_var + right_var
         if impurity < best_impurity:
             best_impurity, split_index = impurity, i
-            return_left_mean, return_right_mean = left_p , right_p
+            return_left_mean, return_right_mean = left_p, right_p
     return split_index, best_impurity, return_left_p, return_right_p

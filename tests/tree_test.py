@@ -2,8 +2,10 @@ import time
 
 from numpy import random
 from pandas import DataFrame, Series
+from sklearn.datasets import load_boston
 
-from algorithms import CartRegressionTreeKFold, CartRegressionTree, TreeVisualizer
+from algorithms import CartRegressionTreeKFold, CartRegressionTree, TreeVisualizer, node_based_feature_importance
+from algorithms.Tree import FastCartRegressionTree, FastCartRegressionTreeKFold
 from tests.test_dataset_creator import create_x_y
 
 
@@ -38,15 +40,34 @@ def create_x_y(regression=True):
     return df, Series(y)
 
 
+def get_x_y_boston():
+    data = load_boston()
+    X = DataFrame(data['data'], columns=data['feature_names'])
+    y = Series(data['target'])
+    return X, y
+
+
 if __name__ == "__main__":
     KFOLD = True
+    FAST = True
+    BOSTON = True
     MAX_DEPTH = 3
-    tree = CartRegressionTreeKFold(max_depth=MAX_DEPTH) if KFOLD else CartRegressionTree(max_depth=MAX_DEPTH)
+    if FAST:
+        model = FastCartRegressionTreeKFold if KFOLD else FastCartRegressionTree
+    else:
+        model = CartRegressionTreeKFold if KFOLD else CartRegressionTree
+
+    tree = model(max_depth=MAX_DEPTH)
     random.seed(10)
-    X, y = create_x_y()
+
+    if BOSTON:
+        X, y = get_x_y_boston()
+    else:
+        X, y = create_x_y()
     start = time.time()
     tree.fit(X, y)
     end = time.time()
     print(end - start)
+    print(node_based_feature_importance(tree))
     tree_vis = TreeVisualizer()
     tree_vis.plot(tree)

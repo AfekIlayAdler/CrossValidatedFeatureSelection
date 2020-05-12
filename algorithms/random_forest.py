@@ -15,7 +15,7 @@ def get_fitted_tree(self, x, y):
     features = random.choice(self.n_cols, self.n_features, replace=False)
     replace = True if self.bootstrap else False
     rows = random.choice(self.n_rows, self.nrows_per_tree, replace=replace)
-    temp_x, temp_y = x.iloc[rows, features], y[rows]
+    temp_x, temp_y = x.iloc[rows, features], y.iloc[rows]
     tree.fit(temp_x, temp_y)
     return tree
 
@@ -52,10 +52,10 @@ class RandomForest:
         if self.n_features == "sqrt":
             self.n_features = int(sqrt(self.n_cols))
 
-        with concurrent.futures.ProcessPoolExecutor() as e:
-            results = [e.submit(get_fitted_tree, self, x, y) for _ in range(self.n_estimators)]
-            self.trees = [f.result() for f in concurrent.futures.as_completed(results)]
-        # self.trees = [get_fitted_tree(self, x, y) for _ in range(self.n_estimators)]
+        # with concurrent.futures.ProcessPoolExecutor() as e:
+        #     results = [e.submit(get_fitted_tree, self, x, y) for _ in range(self.n_estimators)]
+        #     self.trees = [f.result() for f in concurrent.futures.as_completed(results)]
+        self.trees = [get_fitted_tree(self, x, y) for _ in range(self.n_estimators)]
 
     def predict(self, x):
         prediction = zeros(x.shape[0])

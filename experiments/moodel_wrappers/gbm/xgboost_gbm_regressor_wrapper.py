@@ -75,7 +75,7 @@ class XgboostGbmRegressorWrapper:
         return n_leaves_per_tree
 
     def get_n_trees(self):
-        return self.n_leaves_per_tree().sum()
+        return self.n_leaves_per_tree().size
 
     def get_n_leaves(self):
-        return self.n_leaves_per_tree().size
+        return self.n_leaves_per_tree().sum()

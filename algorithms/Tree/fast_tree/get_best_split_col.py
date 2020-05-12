@@ -90,7 +90,7 @@ def compute_categorical_validation_error(X, y, left_values, left_mean, right_mea
         return left_n * left_p * (1 - left_p) + right_n * right_p * (1 - right_p)
 
 
-@njit(cache=True)
+@njit
 def _get_numeric_node_kfold(splitter, X, grad, grad_sums, y, is_regression):
     # validation_purity, purity
     split_index, purity, _, __ = splitter(grad, grad_sums)
@@ -98,15 +98,18 @@ def _get_numeric_node_kfold(splitter, X, grad, grad_sums, y, is_regression):
     n_rows = X.size
     validation_error = 0
     random_permutation = get_random_permutation(n_rows)
-    for i in prange(0, n_rows, n_rows // 5):
-        validation_indices = random_permutation[i:i + n_rows]
+    validation_n_rows = n_rows // 5
+    for i in prange(5):
+        if i != 4:
+            validation_indices = random_permutation[i*validation_n_rows:(i +1)*validation_n_rows]
+        else:
+            validation_indices = random_permutation[i*validation_n_rows:]
         validation_grad = zeros(256, dtype=HISTOGRAM_DTYPE)
         _compute_grad_count_and_sum(X[validation_indices], y[validation_indices], validation_grad)
         temp_grad = grad.copy()
         grad_subtract(temp_grad, validation_grad, 256)
         temp_grad_sums = compute_hist_sum(temp_grad)
-        sorted_indices = argsort(temp_grad['sum_gradients'] / temp_grad['count'])
-        split_index, _, left_mean, right_mean = splitter(temp_grad[sorted_indices], temp_grad_sums)
+        split_index, _, left_mean, right_mean = splitter(temp_grad, temp_grad_sums)
         validation_error += compute_numeric_validation_error(X[validation_indices], y[validation_indices],
                                                              split_index, left_mean, right_mean, is_regression)
     return_arr[0] = validation_error
@@ -123,8 +126,12 @@ def _get_categorical_node_kfold(splitter, X, grad, grad_sums, y, cat_n_bins, is_
     n_rows = X.size
     validation_error = 0
     random_permutation = get_random_permutation(n_rows)
-    for i in prange(0, n_rows, n_rows // 5):
-        validation_indices = random_permutation[i:i + n_rows]
+    validation_n_rows = n_rows // 5
+    for i in prange(5):
+        if i != 4:
+            validation_indices = random_permutation[i*validation_n_rows:(i +1)*validation_n_rows]
+        else:
+            validation_indices = random_permutation[i*validation_n_rows:]
         validation_grad = zeros(cat_n_bins, dtype=HISTOGRAM_DTYPE)
         _compute_grad_count_and_sum(X[validation_indices], y[validation_indices], validation_grad)
         temp_grad = grad.copy()
@@ -143,7 +150,3 @@ def _get_categorical_node_kfold(splitter, X, grad, grad_sums, y, cat_n_bins, is_
                                                                  is_regression)
     purity_and_indices[0] = validation_error
     return purity_and_indices, padded_left_values, left_values_len
-
-
-if __name__ == "__main__":
-    cc.compile()

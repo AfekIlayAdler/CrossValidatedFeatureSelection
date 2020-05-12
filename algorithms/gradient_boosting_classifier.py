@@ -1,4 +1,4 @@
-from .Tree.node import Leaf
+from .Tree import Leaf
 from .Tree import CartRegressionTree, CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
 
 from numpy import mean, array, log, exp, zeros, ones

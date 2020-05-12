@@ -1,6 +1,6 @@
 from pandas import DataFrame
 
-from .Tree.tree_feature_importance import node_based_feature_importance
+from .Tree import node_based_feature_importance
 
 
 class GradientBoostingMachine:

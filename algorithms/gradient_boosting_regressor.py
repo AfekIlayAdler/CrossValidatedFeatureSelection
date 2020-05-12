@@ -1,7 +1,7 @@
 from numpy import mean, ones
 from pandas import DataFrame
 
-from .Tree.node import Leaf
+from .Tree import Leaf
 from .Tree import CartRegressionTree, CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, \
     MIN_SAMPLES_SPLIT
 from .gradient_boosting_abstract import GradientBoostingMachine

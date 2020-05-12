@@ -1,6 +1,6 @@
 from pathlib import Path
 
-N_EXPERIMENTS = 15
+N_EXPERIMENTS = 1
 N_PROCESS = 1
 
 # dataset
@@ -12,10 +12,9 @@ COLUMNS_TO_REMOVE = ["Grant.Application.ID","Start.date"]
 
 DEBUG = True
 MODELS = {
-    'sklearn': ['one_hot', 'mean_imputing'],
+   # 'sklearn': ['one_hot', 'mean_imputing'],
     'ours': ['Kfold', 'CartVanilla']}
 
-DATA_PATH = Path(r"C:\Users\afeki\OneDrive\Desktop\code\Final\datasets\melbourne_grants_classification"
-                 r"\unimelb_training.csv")
+DATA_PATH = Path(r"C:\Users\afeki\Desktop\code\CrossValidatedFeatureSelection\datasets\melbourne_grants_classification\unimelb_training.csv")
 
 

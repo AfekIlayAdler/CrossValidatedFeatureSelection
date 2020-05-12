@@ -4,8 +4,8 @@ import numpy as np
 from pandas import Series, DataFrame, read_csv
 from sklearn.model_selection import train_test_split
 
-from experiments.default_config import RESULTS_DIR, VAL_RATIO, MODELS_DIR, MAX_DEPTH, N_ESTIMATORS, LEARNING_RATE, \
-    CATEGORY_COLUMN_NAME, RF_REGRESSORS
+from experiments.default_config import RESULTS_DIR, VAL_RATIO, MODELS_DIR, N_ESTIMATORS, \
+    RF_REGRESSORS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline
 from experiments.rf_classification_house_grants.config_rf_classification_house_grants import DATA_PATH, \
     Y_COL_NAME, MODELS, N_EXPERIMENTS, DEBUG, N_PROCESS, PROPORTION_NAN_COL_REMOVE, COLUMNS_TO_REMOVE
@@ -33,8 +33,7 @@ def worker(model_name, variant, exp_number):
                                                         test_size=VAL_RATIO, random_state=42)
     results = {'model': F"{model_name}_{variant}", 'exp': exp_number}
     X_train, X_test = transform_categorical_features(X_train, X_test, y_train, variant)
-    model = RF_REGRESSORS[model_name](variant, X.dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
-                                      learning_rate=LEARNING_RATE)
+    model = RF_REGRESSORS[model_name](variant,n_estimators=N_ESTIMATORS)
     model.fit(X_train, y_train)
     print("finished fittin the model")
     results.update({

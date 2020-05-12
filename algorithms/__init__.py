@@ -2,7 +2,8 @@ from .Tree import CartClassificationTreeKFold, CartRegressionTreeKFold, CartClas
 from .Tree import TreeVisualizer
 from .Tree import node_based_feature_importance
 from .random_forest import CartKfoldRandomForestClassifier, CartRandomForestRegressor, CartRandomForestClassifier, CartKfoldRandomForestRegressor
-from .gradient_boosting_regressor import CartGradientBoostingRegressor, CartGradientBoostingRegressorKfold
+from .gradient_boosting_regressor import CartGradientBoostingRegressor, CartGradientBoostingRegressorKfold, \
+    FastCartGradientBoostingRegressor, FastCartGradientBoostingRegressorKfold
 from .gradient_boosting_classifier import CartGradientBoostingClassifier
 from .config import N_ESTIMATORS, LEARNING_RATE
 

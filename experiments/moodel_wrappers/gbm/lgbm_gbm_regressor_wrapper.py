@@ -127,7 +127,7 @@ def trees_to_dataframe(self):
 
 class LgbmGbmRegressorWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate):
+                 learning_rate, fast):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.numeric_col_names = get_non_categorical_colnames(dtypes)

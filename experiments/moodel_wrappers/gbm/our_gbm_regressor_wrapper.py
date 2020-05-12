@@ -2,17 +2,22 @@ from numpy import mean, square, array, nan, sqrt
 from numpy.random import permutation
 from pandas import Series
 
-from algorithms import CartGradientBoostingRegressorKfold, CartGradientBoostingRegressor
+from algorithms import CartGradientBoostingRegressorKfold, CartGradientBoostingRegressor, \
+    FastCartGradientBoostingRegressorKfold, FastCartGradientBoostingRegressor
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
 from experiments.moodel_wrappers.wrapper_utils import normalize_series
 
 
 class OurGbmRegressorWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate):
+                 learning_rate, fast):
 
         self.variant = variant
-        model = CartGradientBoostingRegressorKfold if variant == 'Kfold' else CartGradientBoostingRegressor
+        if fast:
+            model = FastCartGradientBoostingRegressorKfold if variant == 'Kfold' else FastCartGradientBoostingRegressor
+        else:
+            model = CartGradientBoostingRegressorKfold if variant == 'Kfold' else CartGradientBoostingRegressor
+
         self.predictor = model(max_depth=max_depth, n_estimators=n_estimators,
                                learning_rate=learning_rate, min_samples_leaf=5)
         self.x_train_cols = None

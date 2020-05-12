@@ -10,7 +10,7 @@ from experiments.utils import get_categorical_col_indexes, get_categorical_colna
 
 class CatboostGbmRegressorWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate):
+                 learning_rate, fast):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.variant = variant

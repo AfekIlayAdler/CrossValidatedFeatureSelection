@@ -15,11 +15,11 @@ def get_x_y():
     return X, y
 
 
-def worker(model_name, variant):
+def worker(model_name, variant, fast):
     exp_name = F"{model_name}_{variant}.csv"
     dir = RESULTS_DIR / model_name
     exp_results_path = dir / exp_name
-   # if exp_results_path.exists():
+    # if exp_results_path.exists():
     #    return
     X, y = get_x_y()
     X_train, X_test, y_train, y_test = train_test_split(X, y,
@@ -28,7 +28,7 @@ def worker(model_name, variant):
 
     X_train, X_test = transform_categorical_features(X_train, X_test, y_train, variant)
     model = GBM_REGRESSORS[model_name](variant, X.dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
-                                       learning_rate=LEARNING_RATE)
+                                       learning_rate=LEARNING_RATE, fast=fast)
     model.fit(X_train, y_train)
     print("finished fittin the model")
     results.update({
@@ -44,12 +44,13 @@ def worker(model_name, variant):
 
 
 if __name__ == '__main__':
+    FAST = True
     DEBUG = True
     MODELS = {
-        'lgbm': ['vanilla'],
-        'xgboost': ['mean_imputing'],
-        'catboost': ['vanilla'],
-        'sklearn': ['mean_imputing'],
+        # 'lgbm': ['vanilla'],
+        # 'xgboost': ['mean_imputing'],
+        # 'catboost': ['vanilla'],
+        # 'sklearn': ['mean_imputing'],
         'ours': ['Kfold', 'CartVanilla']}
 
     make_dirs([RESULTS_DIR])
@@ -59,9 +60,9 @@ if __name__ == '__main__':
         make_dirs([RESULTS_DIR / model_name])
         for variant in model_variants:
             if DEBUG:
-                worker(model_name, variant)
+                worker(model_name, variant, FAST)
             else:
-                args.append((model_name, variant))
+                args.append((model_name, variant, FAST))
         if not DEBUG:
             with multiprocessing.Pool() as process_pool:
                 process_pool.starmap(worker, args)

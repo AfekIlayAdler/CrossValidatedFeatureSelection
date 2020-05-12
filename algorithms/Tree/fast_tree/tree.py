@@ -176,7 +176,7 @@ class BaseTree:
                 queue.append(next_level_nodes)
 
 
-class CartRegressionTree(BaseTree):
+class FastCartRegressionTree(BaseTree):
     def __init__(self,
                  min_samples_leaf=MIN_SAMPLES_LEAF,
                  max_depth=MAX_DEPTH,
@@ -191,7 +191,7 @@ class CartRegressionTree(BaseTree):
                          is_regression = True)
 
 
-class CartClassificationTree(BaseTree):
+class FastCartClassificationTree(BaseTree):
     def __init__(self,
                  min_samples_leaf=MIN_SAMPLES_LEAF,
                  max_depth=MAX_DEPTH,
@@ -205,7 +205,7 @@ class CartClassificationTree(BaseTree):
                          min_samples_split=min_samples_split)
 
 
-class CartRegressionTreeKFold(BaseTree):
+class FastCartRegressionTreeKFold(BaseTree):
     def __init__(self,
                  min_samples_leaf=MIN_SAMPLES_LEAF,
                  max_depth=MAX_DEPTH,
@@ -220,7 +220,7 @@ class CartRegressionTreeKFold(BaseTree):
                          is_regression = True)
 
 
-class CartClassificationTreeKFold(BaseTree):
+class FastCartClassificationTreeKFold(BaseTree):
     def __init__(self,
                  min_samples_leaf=MIN_SAMPLES_LEAF,
                  max_depth=MAX_DEPTH,
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     from algorithms.Tree.tree_visualizer import TreeVisualizer
     KFOLD = True
     MAX_DEPTH = 1
-    tree = CartRegressionTreeKFold(max_depth=MAX_DEPTH) if KFOLD else CartRegressionTree(max_depth=MAX_DEPTH)
+    tree = FastCartRegressionTreeKFold(max_depth=MAX_DEPTH) if KFOLD else FastCartRegressionTree(max_depth=MAX_DEPTH)
     random.seed(10)
     X, y = create_x_y()
     start = time.time()

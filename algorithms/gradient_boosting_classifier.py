@@ -1,5 +1,5 @@
-from .Tree import Leaf
-from .Tree import CartRegressionTree, CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
+
+from .Tree import Leaf, FastCartRegressionTreeKFold, FastCartRegressionTree, CartRegressionTree, CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
 
 from numpy import mean, array, log, exp, zeros, ones
 from pandas import DataFrame
@@ -105,3 +105,37 @@ class CartGradientBoostingClassifierKfold(GradientBoostingClassifier):
             min_samples_split=min_samples_split)
 
 
+class FastCartGradientBoostingClassifier(GradientBoostingClassifier):
+    def __init__(self,
+                 n_estimators=N_ESTIMATORS,
+                 learning_rate=LEARNING_RATE,
+                 min_samples_leaf=MIN_SAMPLES_LEAF,
+                 max_depth=MAX_DEPTH,
+                 min_impurity_decrease=MIN_IMPURITY_DECREASE,
+                 min_samples_split=MIN_SAMPLES_SPLIT):
+        super().__init__(
+            base_tree=FastCartRegressionTree,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            min_samples_leaf=min_samples_leaf,
+            max_depth=max_depth,
+            min_impurity_decrease=min_impurity_decrease,
+            min_samples_split=min_samples_split)
+
+
+class FastCartGradientBoostingClassifierKfold(GradientBoostingClassifier):
+    def __init__(self,
+                 n_estimators=N_ESTIMATORS,
+                 learning_rate=LEARNING_RATE,
+                 min_samples_leaf=MIN_SAMPLES_LEAF,
+                 max_depth=MAX_DEPTH,
+                 min_impurity_decrease=MIN_IMPURITY_DECREASE,
+                 min_samples_split=MIN_SAMPLES_SPLIT):
+        super().__init__(
+            base_tree=FastCartRegressionTreeKFold,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            min_samples_leaf=min_samples_leaf,
+            max_depth=max_depth,
+            min_impurity_decrease=min_impurity_decrease,
+            min_samples_split=min_samples_split)

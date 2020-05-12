@@ -19,18 +19,22 @@ def worker(model_name, variant):
     exp_name = F"{model_name}_{variant}.csv"
     dir = RESULTS_DIR / model_name
     exp_results_path = dir / exp_name
-    if exp_results_path.exists():
-        return
+   # if exp_results_path.exists():
+    #    return
     X, y = get_x_y()
     X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                         test_size=VAL_RATIO, random_state=42)
     results = {'model': F"{model_name}_{variant}"}
-    # X_train, X_test = transform_categorical_features(X_train, X_test, y_train, variant)
+
+    X_train, X_test = transform_categorical_features(X_train, X_test, y_train, variant)
     model = GBM_REGRESSORS[model_name](variant, X.dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
                                        learning_rate=LEARNING_RATE)
     model.fit(X_train, y_train)
     print("finished fittin the model")
     results.update({
+        'ntrees': model.get_n_trees(),
+        'nleaves': model.get_n_leaves(),
+        'rmse': model.compute_rmse(X_test, y_test),
         'gain': model.compute_fi_gain().to_dict(),
         'permutation_train': model.compute_fi_permutation(X_train, y_train).to_dict(),
         'permutation_test': model.compute_fi_permutation(X_test, y_test).to_dict(),

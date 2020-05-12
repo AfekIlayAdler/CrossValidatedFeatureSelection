@@ -12,7 +12,7 @@ from algorithms.Tree.fast_tree.get_best_split_col import _get_numeric_node, _get
     _get_numeric_node_kfold
 from algorithms.Tree.fast_tree.gradients import compute_grad_sum, compute_children_grad
 from algorithms.Tree.fast_tree.split_data import split_x_y_grad_cat, split_x_y_grad_numeric, split_x_from_indices, split_y_from_indices
-from algorithms.Tree.fast_tree.splitters.cart_splitter import regression_get_split, classification_get_split
+from algorithms.Tree.fast_tree.splitters import regression_get_split, classification_get_split
 from algorithms.Tree.config import MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
 from algorithms.Tree.node import InternalNode, Leaf, CategoricalBinaryNode, NumericBinaryNode
 from algorithms.Tree.utils import get_cols_dtypes, classification_impurity, regression_impurity, get_cat_num_cols, \
@@ -45,6 +45,7 @@ class BaseTree:
         self.cat_cols = None
         self.num_cols = None
         self.cat_n_bins = None
+        self.column_dtypes = None
 
     def calculate_impurity(self, y) -> float:
         return self.impurity(y)
@@ -58,7 +59,7 @@ class BaseTree:
                 n_examples=X_N.shape[0],
                 split_purity=purity,
                 field=self.num_cols[best_col],
-                thr=indicator)
+                splitting_point=indicator)
 
             left_indices, right_indices = split_x_y_grad_numeric(X_N[:, best_col], node.thr)
         else:
@@ -117,6 +118,7 @@ class BaseTree:
         return node
 
     def fit(self, X: DataFrame, y: Series):
+        self.column_dtypes = get_cols_dtypes(X)
         self.cat_cols, self.num_cols = get_cat_num_cols(get_cols_dtypes(X))
         X_cat, X_num = None, None
         cat_grad_data, num_grad_data = None, None

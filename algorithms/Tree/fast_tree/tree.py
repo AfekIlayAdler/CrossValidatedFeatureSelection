@@ -6,16 +6,16 @@ from numba.typed import Dict
 from numpy import zeros, array, random, max, uint16, ones
 from pandas import DataFrame, Series
 
-from .bining import BinMapper
-from .get_best_split import get_best_split
-from .get_best_split_col import _get_numeric_node, _get_categorical_node, _get_categorical_node_kfold, \
+from algorithms.Tree.fast_tree.bining import BinMapper
+from algorithms.Tree.fast_tree.get_best_split import get_best_split
+from algorithms.Tree.fast_tree.get_best_split_col import _get_numeric_node, _get_categorical_node, _get_categorical_node_kfold, \
     _get_numeric_node_kfold
-from .gradients import compute_grad_sum, compute_children_grad
-from .split_data import split_x_y_grad_cat, split_x_y_grad_numeric, split_x_from_indices, split_y_from_indices
-from .splitters.cart_splitter import regression_get_split, classification_get_split
-from ..config import MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
-from ..node import InternalNode, Leaf, CategoricalBinaryNode, NumericBinaryNode
-from ..utils import get_cols_dtypes, classification_impurity, regression_impurity, get_cat_num_cols, \
+from algorithms.Tree.fast_tree.gradients import compute_grad_sum, compute_children_grad
+from algorithms.Tree.fast_tree.split_data import split_x_y_grad_cat, split_x_y_grad_numeric, split_x_from_indices, split_y_from_indices
+from algorithms.Tree.fast_tree.splitters.cart_splitter import regression_get_split, classification_get_split
+from algorithms.Tree.config import MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
+from algorithms.Tree.node import InternalNode, Leaf, CategoricalBinaryNode, NumericBinaryNode
+from algorithms.Tree.utils import get_cols_dtypes, classification_impurity, regression_impurity, get_cat_num_cols, \
     get_n_unique_values_per_cat
 
 
@@ -251,7 +251,7 @@ def create_x_y(regression=True):
 
 
 if __name__ == "__main__":
-    from ..tree_visualizer import TreeVisualizer
+    from algorithms.Tree.tree_visualizer import TreeVisualizer
     KFOLD = True
     MAX_DEPTH = 1
     tree = CartRegressionTreeKFold(max_depth=MAX_DEPTH) if KFOLD else CartRegressionTree(max_depth=MAX_DEPTH)

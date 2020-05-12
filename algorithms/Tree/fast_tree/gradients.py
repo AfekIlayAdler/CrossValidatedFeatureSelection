@@ -1,5 +1,5 @@
 from numba import njit, prange
-from numpy import square, array, float32, uint32, zeros, dtype, ones, uint8
+from numpy import square, array, float32, uint32, zeros, dtype
 
 HISTOGRAM_DTYPE = dtype([
     ('sum_gradients', float32),

@@ -1,4 +1,4 @@
-from numba import njit, jit, types, prange
+from numba import njit, types, prange
 from numba.typed import Dict
 from numpy import argsort, array, int32, zeros, arange, random, square
 

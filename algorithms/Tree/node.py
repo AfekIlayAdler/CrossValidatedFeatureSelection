@@ -47,10 +47,10 @@ class CategoricalBinaryNode(InternalNode):
     child names are left and right
     """
 
-    def __init__(self, n_examples, split_purity, field, left_values, right_values):
+    def __init__(self, n_examples, split_purity, field, left_values):
         super().__init__(n_examples, split_purity, field)
         self.left_values = set(left_values)
-        self.right_values = set(right_values)
+
 
     def get_child(self, value):
         if value in self.left_values:

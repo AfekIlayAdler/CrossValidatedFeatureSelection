@@ -17,3 +17,6 @@
 /experiments/gbm_regression_on_simulated_data/detect_uninformative_feature_simulated_data/catboost_info/learn_error.tsv
 /experiments/gbm_regression_on_simulated_data/detect_uninformative_feature_simulated_data/catboost_info/time_left.tsv
 *catboost_info*
+*.nbi
+*.nbc
+*pycache*

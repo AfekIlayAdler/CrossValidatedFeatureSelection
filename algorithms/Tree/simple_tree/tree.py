@@ -3,12 +3,12 @@ from typing import List, Dict
 from numpy import inf, zeros, array
 from pandas import Series, DataFrame
 
-from .config import MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
+from algorithms.Tree.config import MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
 from .get_node import GetNode
 from .kfold_get_node import KFoldGetNode
-from .node import InternalNode, Leaf
+from algorithms.Tree.node import InternalNode, Leaf
 from .splitters.cart_splitter import CartRegressionSplitter, CartTwoClassClassificationSplitter
-from .utils import impurity_dict, get_cols_dtypes, get_col_type
+from ..utils import impurity_dict, get_cols_dtypes, get_col_type
 
 
 class BaseTree:

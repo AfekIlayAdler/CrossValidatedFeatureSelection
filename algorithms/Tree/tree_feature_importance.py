@@ -1,4 +1,4 @@
-from .node import InternalNode, Leaf
+from algorithms.Tree.node import InternalNode, Leaf
 
 
 def node_based_feature_importance(tree, method='gain'):

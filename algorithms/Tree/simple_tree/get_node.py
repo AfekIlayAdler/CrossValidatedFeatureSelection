@@ -1,7 +1,7 @@
 from numpy import ones, square, arange, empty, array as np_array
 from pandas import DataFrame
 
-from .node import NumericBinaryNode, CategoricalBinaryNode
+from ..node import NumericBinaryNode, CategoricalBinaryNode
 
 
 class GetNode:
@@ -51,8 +51,8 @@ class GetNode:
             left_indices.append(i) if value in left_values_set else right_indices.append(i)
         indices = {'left': left_indices, 'right': right_indices}
         indices = {k: np_array(v).astype(int) for k, v in indices.items()}
-        return CategoricalBinaryNode(n_examples, split.impurity, self.col_name, left_category_values,
-                                     right_category_values), indices
+        return CategoricalBinaryNode(n_examples, split.impurity, self.col_name, left_category_values
+                                     ), indices
 
     def get(self, x, y) -> tuple:
         # simple case, no cross validation score so the validation score is the purity score

@@ -1,5 +1,5 @@
-
-from .Tree import Leaf, FastCartRegressionTreeKFold, FastCartRegressionTree, CartRegressionTree, CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
+from .Tree import Leaf, FastCartRegressionTreeKFold, FastCartRegressionTree, CartRegressionTree, \
+    CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
 
 from numpy import mean, array, log, exp, zeros, ones
 from pandas import DataFrame
@@ -17,7 +17,8 @@ class GradientBoostingClassifier(GradientBoostingMachine):
                  min_samples_leaf,
                  max_depth,
                  min_impurity_decrease,
-                 min_samples_split):
+                 min_samples_split,
+                 bin_numeric_values=False):
         super().__init__(
             base_tree=base_tree,
             n_estimators=n_estimators,
@@ -25,7 +26,8 @@ class GradientBoostingClassifier(GradientBoostingMachine):
             min_samples_leaf=min_samples_leaf,
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
-            min_samples_split=min_samples_split)
+            min_samples_split=min_samples_split,
+            bin_numeric_values = bin_numeric_values)
         self.predictions_to_step_size_dicts = []
 
     def line_search(self, x, y):
@@ -120,7 +122,9 @@ class FastCartGradientBoostingClassifier(GradientBoostingClassifier):
             min_samples_leaf=min_samples_leaf,
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
-            min_samples_split=min_samples_split)
+            min_samples_split=min_samples_split,
+            bin_numeric_values=True
+        )
 
 
 class FastCartGradientBoostingClassifierKfold(GradientBoostingClassifier):
@@ -138,4 +142,6 @@ class FastCartGradientBoostingClassifierKfold(GradientBoostingClassifier):
             min_samples_leaf=min_samples_leaf,
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
-            min_samples_split=min_samples_split)
+            min_samples_split=min_samples_split,
+            bin_numeric_values=True
+        )

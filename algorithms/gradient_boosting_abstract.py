@@ -10,7 +10,8 @@ class GradientBoostingMachine:
                  min_samples_leaf,
                  max_depth,
                  min_impurity_decrease,
-                 min_samples_split):
+                 min_samples_split,
+                 bin_numeric_values):
         self.tree = base_tree
         self.n_estimators = n_estimators
         self.learning_rate = learning_rate
@@ -22,6 +23,7 @@ class GradientBoostingMachine:
         self.base_prediction = None
         self.features = None
         self.trees = []
+        self.bin_numeric_values = bin_numeric_values
 
     def line_search(self, x, y):
         raise NotImplementedError
@@ -35,8 +37,8 @@ class GradientBoostingMachine:
             max_depth=self.max_depth,
             min_impurity_decrease=self.min_impurity_decrease,
             min_samples_split=self.min_samples_split)
-        tree.fit(temp_x, temp_y)
-        predictions = tree.predict(x.to_dict('records'))
+        tree.fit(temp_x, temp_y, self.bin_numeric_values)
+        predictions = tree.predict(x, is_binned = self.bin_numeric_values)
         # TODO: assumption: all leaves provide unique value
         self.trees.append(tree)
         return predictions

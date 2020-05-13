@@ -1,11 +1,11 @@
 from numpy import mean, ones
 from pandas import DataFrame
 
-from .Tree import Leaf, FastCartRegressionTreeKFold, FastCartRegressionTree
 from .Tree import CartRegressionTree, CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, \
     MIN_SAMPLES_SPLIT
-from .gradient_boosting_abstract import GradientBoostingMachine
+from .Tree import Leaf, FastCartRegressionTreeKFold, FastCartRegressionTree
 from .config import N_ESTIMATORS, LEARNING_RATE
+from .gradient_boosting_abstract import GradientBoostingMachine
 
 
 class GradientBoostingRegressor(GradientBoostingMachine):
@@ -17,7 +17,8 @@ class GradientBoostingRegressor(GradientBoostingMachine):
                  min_samples_leaf,
                  max_depth,
                  min_impurity_decrease,
-                 min_samples_split):
+                 min_samples_split,
+                 bin_numeric_values=False):
         super().__init__(
             base_tree=base_tree,
             n_estimators=n_estimators,
@@ -25,7 +26,8 @@ class GradientBoostingRegressor(GradientBoostingMachine):
             min_samples_leaf=min_samples_leaf,
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
-            min_samples_split=min_samples_split)
+            min_samples_split=min_samples_split,
+            bin_numeric_values = bin_numeric_values)
 
     def line_search(self, x, y):
         return x
@@ -46,7 +48,7 @@ class GradientBoostingRegressor(GradientBoostingMachine):
     def predict(self, data: DataFrame):
         prediction = ones(data.shape[0]) * self.base_prediction
         for tree_index, tree in enumerate(self.trees):
-            prediction += self.learning_rate * tree.predict(data.to_dict('records'))
+            prediction += self.learning_rate * tree.predict(data,is_binned = self.bin_numeric_values)
         return prediction
 
 
@@ -101,7 +103,8 @@ class FastCartGradientBoostingRegressor(GradientBoostingRegressor):
             min_samples_leaf=min_samples_leaf,
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
-            min_samples_split=min_samples_split)
+            min_samples_split=min_samples_split,
+            bin_numeric_values=True)
 
 
 class FastCartGradientBoostingRegressorKfold(GradientBoostingRegressor):
@@ -119,4 +122,5 @@ class FastCartGradientBoostingRegressorKfold(GradientBoostingRegressor):
             min_samples_leaf=min_samples_leaf,
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
-            min_samples_split=min_samples_split)
+            min_samples_split=min_samples_split,
+            bin_numeric_values=True)

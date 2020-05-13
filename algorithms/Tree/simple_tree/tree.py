@@ -68,7 +68,7 @@ class BaseTree:
         node.add_depth(depth)
         return node
 
-    def fit(self, X: DataFrame, y: Series):
+    def fit(self, X: DataFrame, y: Series, is_binned = False):
         self.column_dtypes = get_cols_dtypes(X)
         self.column_to_index = {col: i for i, col in enumerate(X.columns)}
         X, y = X.values, y.values
@@ -78,7 +78,8 @@ class BaseTree:
         else:
             self.number_nodes_and_update_tree_data()
 
-    def predict(self, records: List[Dict]) -> array:
+    def predict(self, x: DataFrame, is_binned : False) -> array:
+        records = x.to_dict('records')
         results = zeros(len(records))
         for i, row in enumerate(records):
             node = self.root

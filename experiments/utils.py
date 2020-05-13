@@ -26,7 +26,7 @@ def create_mean_imputing_x_x_val(x, y, x_val, categorical_columns):
         x_val[col] = x_val[col].map(category_to_mean)
         temp_x[col] = temp_x[col].astype('float')
         x_val[col] = x_val[col].astype('float')
-        x_val[col] = x_val[col].fillna(x_val[col].mean())
+        x_val[col] = x_val[col].fillna(temp_x[col].mean())
     temp_x = temp_x.drop(columns=[col_name])
     return temp_x, x_val
 

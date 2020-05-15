@@ -10,7 +10,7 @@ from tests.test_dataset_creator import create_x_y
 
 if __name__ == "__main__":
     KFOLD = False
-    FAST = False
+    FAST = True
     DATA = 'BIKE_RANTAL' # BOSTON
     MAX_DEPTH = 3
     if FAST:
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     elif DATA == 'BIKE_RANTAL':
         X, y = get_x_y_bike_rentals()
         cat_cols, num_cols = get_cat_num_cols(X.dtypes)
-        X = X[cat_cols]
+        X = X#[cat_cols]
     else:
         X, y = create_x_y()
     start = time.time()

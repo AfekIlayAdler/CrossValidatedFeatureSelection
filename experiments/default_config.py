@@ -8,6 +8,7 @@ from experiments.moodel_wrappers.random_forest import OurRfWrapperClassifier, Ou
 MAX_DEPTH = 3
 N_ESTIMATORS = 100
 LEARNING_RATE = 0.1
+SUBSAMPLE = 0.5
 
 # io
 MODELS_DIR = Path(F"results/models/")

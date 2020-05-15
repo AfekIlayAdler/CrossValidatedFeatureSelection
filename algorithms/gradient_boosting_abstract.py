@@ -1,3 +1,4 @@
+from numpy import random
 from pandas import DataFrame
 
 from .Tree import node_based_feature_importance
@@ -11,6 +12,7 @@ class GradientBoostingMachine:
                  max_depth,
                  min_impurity_decrease,
                  min_samples_split,
+                 subsample,
                  bin_numeric_values):
         self.tree = base_tree
         self.n_estimators = n_estimators
@@ -23,6 +25,7 @@ class GradientBoostingMachine:
         self.base_prediction = None
         self.features = None
         self.trees = []
+        self.subsample = subsample
         self.bin_numeric_values = bin_numeric_values
 
     def line_search(self, x, y):
@@ -30,14 +33,21 @@ class GradientBoostingMachine:
 
     def fit_tree(self, x, y):
         """x: features, y: pseudo response"""
-        temp_x = x.copy()
-        temp_y = y.copy()
+        n_rows = x.shape[0]
+        n_samples = int(self.subsample*n_rows)
+        indices = random.choice(n_rows, n_samples, replace = False)
+        if n_samples == n_rows:
+            x_tree = x.copy()
+            y_tree = y.copy()
+        else:
+            x_tree = x.iloc[indices]
+            y_tree = y.iloc[indices]
         tree = self.tree(
             min_samples_leaf=self.min_samples_leaf,
             max_depth=self.max_depth,
             min_impurity_decrease=self.min_impurity_decrease,
             min_samples_split=self.min_samples_split)
-        tree.fit(temp_x, temp_y, self.bin_numeric_values)
+        tree.fit(x_tree, y_tree, self.bin_numeric_values)
         predictions = tree.predict(x, is_binned = self.bin_numeric_values)
         # TODO: assumption: all leaves provide unique value
         self.trees.append(tree)

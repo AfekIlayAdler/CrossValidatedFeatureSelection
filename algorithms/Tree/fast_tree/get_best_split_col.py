@@ -107,7 +107,7 @@ def _get_numeric_node_kfold(splitter, X, grad, grad_sums, y, is_regression):
         validation_grad = zeros(256, dtype=HISTOGRAM_DTYPE)
         _compute_grad_count_and_sum(X[validation_indices], y[validation_indices], validation_grad)
         temp_grad = grad.copy()
-        grad_subtract(temp_grad, validation_grad, 256)
+        grad_subtract(temp_grad, validation_grad)
         temp_grad_sums = compute_hist_sum(temp_grad)
         split_index, _, left_mean, right_mean = splitter(temp_grad, temp_grad_sums)
         validation_error += compute_numeric_validation_error(X[validation_indices], y[validation_indices],
@@ -121,8 +121,6 @@ def _get_categorical_node_kfold(splitter, X, grad, grad_sums, y, cat_n_bins, is_
     # validation_purity, purity
     purity_and_indices, left_values, left_values_len = _get_categorical_node(splitter, X, grad, grad_sums, y,
                                                                              cat_n_bins, is_regression)
-    left_values_len = left_values.size
-    padded_left_values = pad(left_values, cat_n_bins)
     n_rows = X.size
     validation_error = 0
     random_permutation = get_random_permutation(n_rows)
@@ -135,7 +133,7 @@ def _get_categorical_node_kfold(splitter, X, grad, grad_sums, y, cat_n_bins, is_
         validation_grad = zeros(cat_n_bins, dtype=HISTOGRAM_DTYPE)
         _compute_grad_count_and_sum(X[validation_indices], y[validation_indices], validation_grad)
         temp_grad = grad.copy()
-        grad_subtract(temp_grad, validation_grad, cat_n_bins)
+        grad_subtract(temp_grad, validation_grad)
         temp_grad_sums = compute_hist_sum(temp_grad)
         sorted_indices = argsort(temp_grad['sum_gradients'] / temp_grad['count'])
         split_index, _, left_mean, right_mean = splitter(temp_grad[sorted_indices], temp_grad_sums)
@@ -149,4 +147,4 @@ def _get_categorical_node_kfold(splitter, X, grad, grad_sums, y, cat_n_bins, is_
                                                                  temp_left_values_dict, left_mean, right_mean,
                                                                  is_regression)
     purity_and_indices[0] = validation_error
-    return purity_and_indices, padded_left_values, left_values_len
+    return purity_and_indices, left_values, left_values_len

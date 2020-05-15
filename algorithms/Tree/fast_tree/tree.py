@@ -102,8 +102,7 @@ class BaseTree:
             x_c_left, x_c_right = split_x_from_indices(X_C, left_indices, right_indices)
             x_c_g_left, x_c_g_right = compute_children_grad(y_left, y_right, x_c_left,
                                                             x_c_right, X_C_G,
-                                                            self.cat_n_bins,
-                                                            self.n_unique_values_per_cat)
+                                                            self.cat_n_bins)
         if X_N is None:
             x_n_left, x_n_right, x_n_g_left, x_n_g_right = None, None, None, None
         else:
@@ -111,8 +110,7 @@ class BaseTree:
             x_n_g_left, x_n_g_right = compute_children_grad(y_left, y_right, x_n_left,
                                                             x_n_right,
                                                             X_N_G,
-                                                            256,
-                                                            ones(X_N_G.shape[1]) * 256)
+                                                            256)
 
         node.left = self._grow_tree(x_c_left, x_n_left, x_c_g_left, x_n_g_left, y_left, depth + 1)
         node.right = self._grow_tree(x_c_right, x_n_right, x_c_g_right, x_n_g_right, y_right, depth + 1)
@@ -128,7 +126,7 @@ class BaseTree:
         if self.cat_cols:
             X_cat = X[self.cat_cols].values.astype(uint16)
             self.n_unique_values_per_cat = get_max_value_per_cat(X_cat)
-            self.cat_n_bins = max(self.n_unique_values_per_cat) + 1
+            self.cat_n_bins = max(self.n_unique_values_per_cat) +1
             cat_grad_data = compute_grad_sum(X_cat, y, self.cat_n_bins)
         if self.num_cols:
             X_num = X[self.num_cols].values

@@ -14,7 +14,7 @@ def get_cat_cols(dtypes: Series):
     return dtypes[dtypes == 'category'].index.tolist()
 
 
-def get_num_cols(dtypes : Series):
+def get_num_cols(dtypes: Series):
     return dtypes[dtypes != 'category'].index.tolist()
 
 
@@ -23,7 +23,8 @@ def get_cat_num_cols(dtypes):
 
 
 def get_max_value_per_cat(X):
-    return array([X[:, col].max() for col in range(X.shape[1])])
+    # todo : make sure all cat values are in 0 - n-1 in preprocessing can remove the max and X[:, col].max()
+    return array([max(len(unique(X[:, col])), X[:, col].max()) for col in range(X.shape[1])])
 
 
 def get_col_type(col_type):

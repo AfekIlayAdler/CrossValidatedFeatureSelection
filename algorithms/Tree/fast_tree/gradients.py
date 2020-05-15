@@ -15,28 +15,28 @@ HISTOGRAM_DTYPE = dtype([
 
 
 @njit(cache=True)
-def grad_subtract(a, b, max_iter):
-    for i in range(int(max_iter)):
+def grad_subtract(a, b):
+    for i in range(a.size):
         a[i]['sum_gradients'] -= b[i]['sum_gradients']
         a[i]['sum_squared_gradients'] -= b[i]['sum_squared_gradients']
         a[i]['count'] -= b[i]['count']
 
 
 @njit(parallel=True, cache=True)
-def subtract_grad(grad_a, grad_b, column_len):
+def subtract_grad(grad_a, grad_b):
     for col in prange(grad_a.shape[1]):
-        grad_subtract(grad_a[:, col], grad_b[:, col], column_len[col])
+        grad_subtract(grad_a[:, col], grad_b[:, col])
     return grad_a
 
 
 def compute_children_grad(y_left, y_right, x_left, x_right, node_grad,
-                          n_bins, n_unique_values_per_col):
+                          n_bins):
     if y_left.size < y_right.size:
         x_g_left = compute_grad_sum(x_left, y_left, n_bins)
-        x_g_right = subtract_grad(node_grad, x_g_left, n_unique_values_per_col)
+        x_g_right = subtract_grad(node_grad, x_g_left)
     else:
         x_g_right = compute_grad_sum(x_right, y_right, n_bins)
-        x_g_left = subtract_grad(node_grad, x_g_right, n_unique_values_per_col)
+        x_g_left = subtract_grad(node_grad, x_g_right)
     return x_g_left, x_g_right
 
 

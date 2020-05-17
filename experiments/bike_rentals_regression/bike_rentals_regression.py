@@ -67,14 +67,14 @@ def worker(model_name, variant, fast, exp_number):
 
 if __name__ == '__main__':
     FAST = True
-    N_EXPERIMENTS = 15
+    N_EXPERIMENTS = 30
 
     MODELS = {
         # 'lgbm': ['vanilla'],
         # 'xgboost': ['one_hot', 'mean_imputing'],
-        # 'catboost': ['vanilla'],
+        'catboost': ['vanilla'],
         # 'sklearn': ['one_hot', 'mean_imputing'],
-        'ours': ['Kfold', 'CartVanilla']
+        # 'ours': ['Kfold', 'CartVanilla']
     }
 
 

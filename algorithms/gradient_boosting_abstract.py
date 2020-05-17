@@ -35,6 +35,7 @@ class GradientBoostingMachine:
         """x: features, y: pseudo response"""
         n_rows = x.shape[0]
         n_samples = int(self.subsample*n_rows)
+        # todo: change replace to true???
         indices = random.choice(n_rows, n_samples, replace = False)
         if n_samples == n_rows:
             x_tree = x.copy()

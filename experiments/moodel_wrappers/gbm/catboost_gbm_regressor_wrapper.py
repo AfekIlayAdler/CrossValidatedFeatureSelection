@@ -10,14 +10,15 @@ from experiments.utils import get_categorical_col_indexes, get_categorical_colna
 
 class CatboostGbmRegressorWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, fast):
+                 learning_rate, subsample,  fast):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.variant = variant
         self.predictor = CatBoostRegressor(iterations=n_estimators,
                                            depth=max_depth,
                                            learning_rate=learning_rate,
-                                           loss_function='RMSE', logging_level='Silent')
+                                           loss_function='RMSE', logging_level='Silent', subsample = subsample,
+                                           bootstrap_type= 'Bernoulli')
 
         self.x_train_cols = None
 

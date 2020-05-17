@@ -10,13 +10,13 @@ from experiments.utils import get_categorical_col_indexes, get_categorical_colna
 
 class XgboostGbmRegressorWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, fast):
+                 learning_rate, subsample, fast):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.numeric_col_names = get_non_categorical_colnames(dtypes)
         self.variant = variant
         self.n_estimators = n_estimators
-        self.param = {'max_depth': max_depth, 'eta': learning_rate, 'objective': 'reg:squarederror'}
+        self.param = {'max_depth': max_depth, 'eta': learning_rate, 'objective': 'reg:squarederror', 'subsample': subsample}
         self.predictor = None
         self.x_train_cols = None
 

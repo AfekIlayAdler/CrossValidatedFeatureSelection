@@ -127,7 +127,7 @@ def trees_to_dataframe(self):
 
 class LgbmGbmRegressorWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, fast):
+                 learning_rate, subsample, fast):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.numeric_col_names = get_non_categorical_colnames(dtypes)
@@ -138,7 +138,9 @@ class LgbmGbmRegressorWrapper:
             learning_rate=learning_rate,
             objective='regression',
             max_depth=max_depth,
-            importance_type='gain')
+            importance_type='gain',
+            bagging_freq=1,
+            bagging_fraction=subsample)
         self.x_train_cols = None
 
     def fit(self, X, y):

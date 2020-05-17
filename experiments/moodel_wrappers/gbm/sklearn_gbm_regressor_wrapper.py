@@ -10,13 +10,13 @@ from experiments.utils import get_categorical_col_indexes, get_categorical_colna
 
 class SklearnGbmRegressorWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, fast):
+                 learning_rate,subsample, fast):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.numeric_col_names = get_non_categorical_colnames(dtypes)
         self.variant = variant
         self.predictor = GradientBoostingRegressor(max_depth=max_depth, n_estimators=n_estimators,
-                                                   learning_rate=learning_rate)
+                                                   learning_rate=learning_rate, subsample = subsample)
         self.x_train_cols = None
 
     def fit(self, X, y):

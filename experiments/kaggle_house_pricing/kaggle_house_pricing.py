@@ -17,6 +17,13 @@ def get_x_y():
     train = read_csv(project_root / 'datasets/house_prices_kaggle/train.csv')
     y = train[y_col_name]
     X = train.drop(columns=[y_col_name])
+    X = X[['Id', 'MSZoning', 'LotShape', 'LandContour', 'LotConfig', 'LandSlope', 'Neighborhood', 'Condition1',
+           'Condition2',
+           'BldgType', 'HouseStyle', 'RoofStyle', 'RoofMatl', 'Exterior1st', 'Exterior2nd', 'MasVnrType', 'ExterQual',
+           'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2', 'Heating',
+           'HeatingQC', 'Electrical', 'KitchenQual', 'Functional', 'FireplaceQu', 'GarageType', 'GarageFinish',
+           'GarageQual',
+           'GarageCond', 'PavedDrive', 'SaleType', 'SaleCondition']]
     return X, y
 
 
@@ -27,28 +34,16 @@ def worker(model_name, variant):
     if exp_results_path.exists():
         return
     X, y = get_x_y()
-    X = X[['Id', 'MSZoning', 'LotShape', 'LandContour', 'LotConfig', 'LandSlope', 'Neighborhood', 'Condition1',
-           'Condition2',
-           'BldgType', 'HouseStyle', 'RoofStyle', 'RoofMatl', 'Exterior1st', 'Exterior2nd', 'MasVnrType', 'ExterQual',
-           'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2', 'Heating',
-           'HeatingQC', 'Electrical', 'KitchenQual', 'Functional', 'FireplaceQu', 'GarageType', 'GarageFinish',
-           'GarageQual',
-           'GarageCond', 'PavedDrive', 'SaleType', 'SaleCondition']]
+    cols_to_remove = ['Id']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=VAL_RATIO)
-    pipeline = get_preprocessing_pipeline(0.5, ['Id'])
+    pipeline = get_preprocessing_pipeline(0.5, cols_to_remove)
     pipeline.fit(X_train)
     X_train = pipeline.transform(X_train)
     X_test = pipeline.transform(X_test)
-
-    # if model_name == 'ours':
-    #     num_cols = get_num_cols(X_train.dtypes)
-    #     bin_mapper = BinMapper(max_bins=256, random_state=42)
-    #     X_train.loc[:, num_cols] = bin_mapper.fit_transform(X_train.loc[:, num_cols].values)
-    #     X_test.loc[:, num_cols] = bin_mapper.transform(X_test.loc[:, num_cols].values)
-
     results = {'model': F"{model_name}_{variant}"}
+    original_dtypes = X_train.dtypes
     X_train, X_test = transform_categorical_features(X_train, X_test, y_train, variant)
-    model = GBM_REGRESSORS[model_name](variant, X.dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
+    model = GBM_REGRESSORS[model_name](variant,original_dtypes , max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
                                        learning_rate=LEARNING_RATE, subsample=1., fast=True)
     model.fit(X_train, y_train)
     print('finished fitting the model')
@@ -66,8 +61,8 @@ def worker(model_name, variant):
 
 
 if __name__ == '__main__':
-    MODELS = dict(lgbm=['vanilla'], xgboost=['mean_imputing'], catboost=['vanilla'],
-                  sklearn=['mean_imputing'], ours=['Kfold', 'CartVanilla'])
+    MODELS = dict(lgbm=['vanilla'], xgboost=['mean_imputing', 'one_hot'], catboost=['vanilla'],
+                  sklearn=['mean_imputing', 'one_hot'], ours=['Kfold', 'CartVanilla'])
 
     make_dirs([RESULTS_DIR])
     start = time()

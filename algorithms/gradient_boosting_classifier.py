@@ -7,6 +7,8 @@ from pandas import DataFrame
 from .gradient_boosting_abstract import GradientBoostingMachine
 from .config import N_ESTIMATORS, LEARNING_RATE
 
+SUBSAMPLE = 1.
+
 
 class GradientBoostingClassifier(GradientBoostingMachine):
     """currently supports only binomial log likelihood as in the original paper of friedman"""
@@ -18,6 +20,7 @@ class GradientBoostingClassifier(GradientBoostingMachine):
                  max_depth,
                  min_impurity_decrease,
                  min_samples_split,
+                 subsample,
                  bin_numeric_values=False):
         super().__init__(
             base_tree=base_tree,
@@ -27,19 +30,22 @@ class GradientBoostingClassifier(GradientBoostingMachine):
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
             min_samples_split=min_samples_split,
-            bin_numeric_values = bin_numeric_values)
+            subsample=subsample,
+            bin_numeric_values=bin_numeric_values)
+
         self.predictions_to_step_size_dicts = []
 
     def line_search(self, x, y):
         """
-        x: tree predictions
-        y : pseudo_response
+        x: tree predictions: the gradients the tree predicted
+        y : pseudo_response: the true gradients
         """
         n_rows = x.shape[0]
+        y_ = y.values
         predictions_to_step_size_dict = {}
         for index in range(n_rows):
             predictions_to_step_size_dict.setdefault(x[index], array([0., 0.]))
-            predictions_to_step_size_dict[x[index]] += array([y[index], abs(y[index]) * (2 - abs(y[index]))])
+            predictions_to_step_size_dict[x[index]] += array([y_[index], abs(y_[index]) * (2 - abs(y_[index]))])
         for key, value in predictions_to_step_size_dict.items():
             predictions_to_step_size_dict[key] = value[0] / value[1]
         self.predictions_to_step_size_dicts.append(predictions_to_step_size_dict)
@@ -64,7 +70,7 @@ class GradientBoostingClassifier(GradientBoostingMachine):
     def predict(self, data: DataFrame):
         prediction = ones(data.shape[0]) * self.base_prediction
         for tree_index, tree in enumerate(self.trees):
-            tree_predictions = tree.predict(data.to_dict('records'))
+            tree_predictions = tree.predict(data, is_binned=self.bin_numeric_values)
             for i in range(tree_predictions.size):
                 tree_predictions[i] = self.predictions_to_step_size_dicts[tree_index].get(tree_predictions[i])
             prediction += self.learning_rate * tree_predictions
@@ -78,7 +84,8 @@ class CartGradientBoostingClassifier(GradientBoostingClassifier):
                  min_samples_leaf=MIN_SAMPLES_LEAF,
                  max_depth=MAX_DEPTH,
                  min_impurity_decrease=MIN_IMPURITY_DECREASE,
-                 min_samples_split=MIN_SAMPLES_SPLIT):
+                 min_samples_split=MIN_SAMPLES_SPLIT,
+                 subsample=SUBSAMPLE):
         super().__init__(
             base_tree=CartRegressionTree,
             n_estimators=n_estimators,
@@ -86,7 +93,9 @@ class CartGradientBoostingClassifier(GradientBoostingClassifier):
             min_samples_leaf=min_samples_leaf,
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
-            min_samples_split=min_samples_split)
+            min_samples_split=min_samples_split,
+            subsample=subsample,
+        )
 
 
 class CartGradientBoostingClassifierKfold(GradientBoostingClassifier):
@@ -96,7 +105,8 @@ class CartGradientBoostingClassifierKfold(GradientBoostingClassifier):
                  min_samples_leaf=MIN_SAMPLES_LEAF,
                  max_depth=MAX_DEPTH,
                  min_impurity_decrease=MIN_IMPURITY_DECREASE,
-                 min_samples_split=MIN_SAMPLES_SPLIT):
+                 min_samples_split=MIN_SAMPLES_SPLIT,
+                 subsample=SUBSAMPLE):
         super().__init__(
             base_tree=CartRegressionTreeKFold,
             n_estimators=n_estimators,
@@ -104,7 +114,9 @@ class CartGradientBoostingClassifierKfold(GradientBoostingClassifier):
             min_samples_leaf=min_samples_leaf,
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
-            min_samples_split=min_samples_split)
+            min_samples_split=min_samples_split,
+            subsample=subsample,
+        )
 
 
 class FastCartGradientBoostingClassifier(GradientBoostingClassifier):
@@ -114,7 +126,8 @@ class FastCartGradientBoostingClassifier(GradientBoostingClassifier):
                  min_samples_leaf=MIN_SAMPLES_LEAF,
                  max_depth=MAX_DEPTH,
                  min_impurity_decrease=MIN_IMPURITY_DECREASE,
-                 min_samples_split=MIN_SAMPLES_SPLIT):
+                 min_samples_split=MIN_SAMPLES_SPLIT,
+                 subsample=SUBSAMPLE):
         super().__init__(
             base_tree=FastCartRegressionTree,
             n_estimators=n_estimators,
@@ -123,6 +136,7 @@ class FastCartGradientBoostingClassifier(GradientBoostingClassifier):
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
             min_samples_split=min_samples_split,
+            subsample=subsample,
             bin_numeric_values=True
         )
 
@@ -134,7 +148,8 @@ class FastCartGradientBoostingClassifierKfold(GradientBoostingClassifier):
                  min_samples_leaf=MIN_SAMPLES_LEAF,
                  max_depth=MAX_DEPTH,
                  min_impurity_decrease=MIN_IMPURITY_DECREASE,
-                 min_samples_split=MIN_SAMPLES_SPLIT):
+                 min_samples_split=MIN_SAMPLES_SPLIT,
+                 subsample=SUBSAMPLE):
         super().__init__(
             base_tree=FastCartRegressionTreeKFold,
             n_estimators=n_estimators,
@@ -143,5 +158,6 @@ class FastCartGradientBoostingClassifierKfold(GradientBoostingClassifier):
             max_depth=max_depth,
             min_impurity_decrease=min_impurity_decrease,
             min_samples_split=min_samples_split,
+            subsample=subsample,
             bin_numeric_values=True
         )

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from numpy import random
 from pandas import DataFrame, Series, to_datetime, read_csv
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_boston, load_breast_cancer
 
 
 def get_x_y_boston():
@@ -11,6 +11,12 @@ def get_x_y_boston():
     y = Series(data['target'])
     return X, y
 
+
+def get_x_y_breast_cancer():
+    data = load_breast_cancer()
+    X = DataFrame(data['data'], columns=data['feature_names'])
+    y = Series(data['target'])
+    return X, y
 
 def get_x_y_bike_rentals():
     def preprocess_df(df):

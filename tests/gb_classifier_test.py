@@ -1,28 +1,52 @@
-if __name__ == '__main__':
-    import numpy as np
-    import pandas as pd
+import time
 
+import numpy as np
+from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
 
-    def sigmoid(x):
-        return 1 / (1 + np.exp(-x))
+from algorithms import FastCartGradientBoostingClassifierKfold, \
+    FastCartGradientBoostingClassifier, CartGradientBoostingClassifierKfold, CartGradientBoostingClassifier
+from algorithms.Tree import TreeVisualizer
+from algorithms.Tree.fast_tree.bining import BinMapper
+from algorithms.Tree.utils import get_num_cols
+from tests.get_xy import get_x_y_breast_cancer
 
+if __name__ == "__main__":
 
-    def create_x_y():
-        a = 0.1
-        N_ROWS = 1000
-        category_size = 10
-        CATEGORY_COLUMN_NAME = 'category'
-        X = pd.DataFrame()
-        X[CATEGORY_COLUMN_NAME] = np.random.randint(0, category_size, N_ROWS)
-        X[CATEGORY_COLUMN_NAME] = X[CATEGORY_COLUMN_NAME].astype('category')
-        X['x1'] = np.random.randn(N_ROWS)
-        sigma = 0.1 * np.random.randn(N_ROWS)
-        left_group = [i for i in range(category_size // 2)]
-        y = np.round(sigmoid(a * (X['x1'] > 0) * 1 + (1 - a) * X[CATEGORY_COLUMN_NAME].isin(left_group)) + sigma)
-        return X, y
+    np.seterr(all='raise')
+    KFOLD = False
+    FAST = False
+    MAX_DEPTH = 3
+    np.random.seed(3)
 
+    if FAST:
+        model = FastCartGradientBoostingClassifierKfold if KFOLD else FastCartGradientBoostingClassifier
+    else:
+        model = CartGradientBoostingClassifierKfold if KFOLD else CartGradientBoostingClassifier
+    reg = model(max_depth=3)
 
-    X, y = create_x_y()
-    reg = CartGradientBoostingClassifier(n_estimators=2, max_depth=3)
-    reg.fit(X, y)
-    y_hat = reg.predict(X)
+    X, y = get_x_y_breast_cancer()
+    X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                        test_size=0.1, random_state=42)
+
+    if FAST:
+        num_cols = get_num_cols(X.dtypes)
+        bin_mapper = BinMapper(max_bins=256, random_state=42)
+        X_train.loc[:, num_cols] = bin_mapper.fit_transform(X_train.loc[:, num_cols].values)
+        X_test.loc[:, num_cols] = bin_mapper.transform(X_test.loc[:, num_cols].values)
+
+    start = time.time()
+    reg.fit(X_train, y_train)
+    end = time.time()
+    print(end - start)
+
+    start = time.time()
+    print(f"mse is {f1_score(y_test, (reg.predict(X_test) >0.5)*1)}")
+    end = time.time()
+    print(end - start)
+
+    tree_vis = TreeVisualizer()
+    tree_vis.plot(reg.trees[0])
+
+    print(reg.n_trees)
+    print(reg.compute_feature_importance())

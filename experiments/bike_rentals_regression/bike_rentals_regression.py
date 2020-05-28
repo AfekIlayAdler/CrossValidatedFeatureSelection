@@ -1,5 +1,7 @@
 from pathlib import Path
 from time import time
+
+from numpy import random
 from numpy.random import seed
 
 from pandas import Series, DataFrame, read_csv, to_datetime
@@ -24,6 +26,9 @@ def get_x_y():
         X = df[['datetime', 'season', 'holiday', 'workingday', 'weather', 'temp',
                 'atemp', 'humidity', 'windspeed']]
         y = df['count']
+        ############################
+        # X['index'] = random.randint(0,1000,X.shape[0])
+        # X['index'] = X['index'].astype('category')
         return X, y
 
     project_root = Path(__file__).parent.parent.parent
@@ -32,11 +37,11 @@ def get_x_y():
     return X, y
 
 
-def worker(model_name, variant, fast, exp_number):
-    exp_name = F"{model_name}_{variant}_{exp_number}.csv"
+def worker(model_name, variant, fast):
+    exp_name = F"{model_name}_{variant}.csv"
     dir = RESULTS_DIR / model_name
     exp_results_path = dir / exp_name
-    seed(exp_number)
+    # seed(exp_number)
     if exp_results_path.exists():
         return
     X, y = get_x_y()
@@ -50,7 +55,7 @@ def worker(model_name, variant, fast, exp_number):
     results = {'model': F"{model_name}_{variant}"}
     X_train, X_test = transform_categorical_features(X_train, X_test, y_train, variant)
     model = GBM_REGRESSORS[model_name](variant, X.dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
-                                       learning_rate=LEARNING_RATE, subsample=SUBSAMPLE, fast=fast)
+                                       learning_rate=LEARNING_RATE, subsample=1., fast=fast)
     model.fit(X_train, y_train)
     results.update({
         'ntrees': model.get_n_trees(),
@@ -70,13 +75,12 @@ if __name__ == '__main__':
     N_EXPERIMENTS = 30
 
     MODELS = {
-        # 'lgbm': ['vanilla'],
-        # 'xgboost': ['one_hot', 'mean_imputing'],
+        'lgbm': ['vanilla'],
+        'xgboost': ['mean_imputing'], # 'one_hot'
         'catboost': ['vanilla'],
-        # 'sklearn': ['one_hot', 'mean_imputing'],
-        # 'ours': ['Kfold', 'CartVanilla']
+        'sklearn': [ 'mean_imputing'], # 'one_hot',
+        'ours': ['Kfold', 'CartVanilla']
     }
-
 
     make_dirs([RESULTS_DIR])
     start = time()
@@ -85,9 +89,9 @@ if __name__ == '__main__':
         make_dirs([RESULTS_DIR / model_name])
         with tqdm(total=N_EXPERIMENTS * len(model_variants)) as pbar:
             for variant in model_variants:
-                for exp in range(N_EXPERIMENTS):
-                    worker(model_name, variant, FAST, exp)
-                    print(f"Finished exp # {exp}")
-                    pbar.update(1)
+                # for exp in range(N_EXPERIMENTS):
+                worker(model_name, variant, FAST)
+                print(f"Finished exp # {0}")
+                pbar.update(1)
     end = time()
     print("run took {end - time}")

@@ -48,6 +48,7 @@ class OurGbmRegressorWrapper:
                 prm_results = process_pool.starmap(worker, args)
 
             results[col] = mean(array(prm_results)) - mse
+            print(col)
         fi = Series(results)
         return normalize_series(fi)
 

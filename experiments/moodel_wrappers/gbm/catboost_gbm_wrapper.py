@@ -1,24 +1,32 @@
-from catboost import CatBoostRegressor, Pool
+from catboost import CatBoostRegressor, Pool, CatBoostClassifier
 from numpy import mean, square, array, sqrt
 from numpy.random import permutation
 from pandas import Series
+from sklearn.metrics import f1_score
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
 from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values
 from experiments.utils import get_categorical_col_indexes, get_categorical_colnames
 
 
-class CatboostGbmRegressorWrapper:
+class CatboostGbmWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, subsample,  fast):
+                 learning_rate, subsample, model):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.variant = variant
-        self.predictor = CatBoostRegressor(iterations=n_estimators,
-                                           depth=max_depth,
-                                           learning_rate=learning_rate,
-                                           loss_function='RMSE', logging_level='Silent', subsample = subsample,
-                                           bootstrap_type= 'Bernoulli')
+        if model == 'regression':
+            self.predictor = CatBoostRegressor(iterations=n_estimators,
+                                               depth=max_depth,
+                                               learning_rate=learning_rate,
+                                               loss_function='RMSE', logging_level='Silent', subsample=subsample,
+                                               bootstrap_type='Bernoulli')
+        else:
+            self.predictor = CatBoostClassifier(iterations=n_estimators,
+                                                depth=max_depth,
+                                                learning_rate=learning_rate,
+                                                logging_level='Silent', subsample=subsample,
+                                                bootstrap_type='Bernoulli')
 
         self.x_train_cols = None
 
@@ -58,8 +66,37 @@ class CatboostGbmRegressorWrapper:
     def compute_rmse(self, X, y):
         return sqrt(mean(square(y - self.predictor.predict(self.get_pool(X)))))
 
+    def compute_f1(self, X, y):
+        f1_score(y, (self.predictor.predict(self.get_pool(X)) > 0.5) * 1)
+
     def get_n_trees(self):
         return self.predictor.tree_count_
 
     def get_n_leaves(self):
-        return self.predictor.tree_count_*(2**self.predictor._init_params['depth'])
+        return self.predictor.tree_count_ * (2 ** self.predictor._init_params['depth'])
+
+
+class CatboostGbmRegressorWrapper(CatboostGbmWrapper):
+    def __init__(self, variant, dtypes, max_depth, n_estimators,
+                 learning_rate, subsample):
+        super().__init__(
+            variant=variant,
+            dtypes=dtypes,
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            model='regression')
+
+
+class CatboostGbmClassifierWrapper(CatboostGbmWrapper):
+    def __init__(self, variant, dtypes, max_depth, n_estimators,
+                 learning_rate, subsample):
+        super().__init__(
+            variant=variant,
+            dtypes=dtypes,
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            model='classification')

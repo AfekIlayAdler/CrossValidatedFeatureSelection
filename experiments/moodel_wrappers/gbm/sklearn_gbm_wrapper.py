@@ -1,22 +1,23 @@
 from numpy import mean, square, array, nan, sqrt
 from numpy.random import permutation
 from pandas import Series
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
+from sklearn.metrics import f1_score
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
 from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values
 from experiments.utils import get_categorical_col_indexes, get_categorical_colnames, get_non_categorical_colnames
 
 
-class SklearnGbmRegressorWrapper:
+class SklearnGbmWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate,subsample, fast):
+                 learning_rate, subsample, model):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.numeric_col_names = get_non_categorical_colnames(dtypes)
         self.variant = variant
-        self.predictor = GradientBoostingRegressor(max_depth=max_depth, n_estimators=n_estimators,
-                                                   learning_rate=learning_rate, subsample = subsample)
+        self.predictor = model(max_depth=max_depth, n_estimators=n_estimators,
+                               learning_rate=learning_rate, subsample=subsample)
         self.x_train_cols = None
 
     def fit(self, X, y):
@@ -62,6 +63,9 @@ class SklearnGbmRegressorWrapper:
     def compute_rmse(self, X, y):
         return sqrt(mean(square(y - self.predictor.predict(X))))
 
+    def compute_f1(self, X, y):
+        f1_score(y, (self.predictor.predict(X) > 0.5) * 1)
+
     def n_leaves_per_tree(self):
         n_leaves_per_tree = Series({i: tree[0].tree_.n_leaves for i, tree in enumerate(self.predictor.estimators_)})
         n_leaves_per_tree = n_leaves_per_tree[n_leaves_per_tree > 1]
@@ -72,3 +76,29 @@ class SklearnGbmRegressorWrapper:
 
     def get_n_leaves(self):
         return self.n_leaves_per_tree().sum()
+
+
+class SklearnGbmRegressorWrapper(SklearnGbmWrapper):
+    def __init__(self, variant, dtypes, max_depth, n_estimators,
+                 learning_rate, subsample):
+        super().__init__(
+            variant=variant,
+            dtypes=dtypes,
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            model=GradientBoostingRegressor)
+
+
+class SklearnGbmClassifierWrapper(SklearnGbmWrapper):
+    def __init__(self, variant, dtypes, max_depth, n_estimators,
+                 learning_rate, subsample):
+        super().__init__(
+            variant=variant,
+            dtypes=dtypes,
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            model=GradientBoostingClassifier)

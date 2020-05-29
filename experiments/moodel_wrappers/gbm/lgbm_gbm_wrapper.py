@@ -4,6 +4,7 @@ import lightgbm as lgb
 from numpy import mean, square, array, sqrt
 from numpy.random import permutation
 from pandas import Series, DataFrame
+from sklearn.metrics import f1_score
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
 from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values
@@ -125,18 +126,16 @@ def trees_to_dataframe(self):
     return DataFrame(model_list, columns=model_list[0].keys())
 
 
-class LgbmGbmRegressorWrapper:
+class LgbmGbmWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, subsample, fast):
+                 learning_rate, subsample, model):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.numeric_col_names = get_non_categorical_colnames(dtypes)
         self.variant = variant
         self.n_estimators = n_estimators
-        self.predictor = lgb.LGBMRegressor(
-            boosting_type='gbdt',
+        self.predictor = model(
             learning_rate=learning_rate,
-            objective='regression',
             max_depth=max_depth,
             importance_type='gain',
             bagging_freq=1,
@@ -189,6 +188,9 @@ class LgbmGbmRegressorWrapper:
     def compute_rmse(self, X, y):
         return sqrt(mean(square(y - self.predictor.predict(X))))
 
+    def compute_f1(self, X, y):
+        f1_score(y, (self.predictor.predict(X) > 0.5) * 1)
+
     def n_leaves_per_tree(self):
         df = trees_to_dataframe(self.predictor.booster_)
         leaves_per_tree = df[df['split_feature'].isna()]['tree_index']
@@ -201,3 +203,29 @@ class LgbmGbmRegressorWrapper:
 
     def get_n_leaves(self):
         return self.n_leaves_per_tree().sum()
+
+
+class LgbmGbmRegressorWrapper(LgbmGbmWrapper):
+    def __init__(self, variant, dtypes, max_depth, n_estimators,
+                 learning_rate, subsample):
+        super().__init__(
+            variant=variant,
+            dtypes=dtypes,
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            model=lgb.LGBMRegressor)
+
+
+class LgbmGbmClassifierWrapper(LgbmGbmWrapper):
+    def __init__(self, variant, dtypes, max_depth, n_estimators,
+                 learning_rate, subsample):
+        super().__init__(
+            variant=variant,
+            dtypes=dtypes,
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            model=lgb.LGBMClassifier)

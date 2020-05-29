@@ -21,3 +21,4 @@
 *.nbc
 *pycache*
 /experiments/breast_cancer/cb_model.json
+/experiments/criteo_ctr/cb_model.json

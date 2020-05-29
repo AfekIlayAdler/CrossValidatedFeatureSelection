@@ -20,3 +20,4 @@
 *.nbi
 *.nbc
 *pycache*
+/experiments/breast_cancer/cb_model.json

@@ -9,6 +9,8 @@ def normalize_series(s):
 
 
 def get_shap_values(model, x, columns):
-    abs_shap_values = DataFrame(shap.TreeExplainer(model, feature_perturbation="tree_path_dependent").shap_values(x),
-                                columns=columns).apply(abs)
+    shap_values = shap.TreeExplainer(model, feature_perturbation="tree_path_dependent").shap_values(x)
+    if type(shap_values) == list:
+        shap_values = shap_values[0]
+    abs_shap_values = DataFrame(shap_values,columns=columns).apply(abs)
     return abs_shap_values.mean() / abs_shap_values.mean().sum()

@@ -55,6 +55,7 @@ class GradientBoostingClassifier(GradientBoostingMachine):
         return gamma
 
     def fit(self, x, y):
+        self.features = x.columns
         y = 2 * y - 1
         self.base_prediction = 0.5 * log((1 + mean(y)) / (1 - mean(y)))
         f = self.base_prediction

@@ -69,7 +69,7 @@ class XgboostGbmWrapper:
         return sqrt(mean(square(y - self.predictor.predict(xgb.DMatrix(X)))))
 
     def compute_f1(self, X, y):
-        f1_score(y, (self.predictor.predict(xgb.DMatrix(X)) > 0.5) * 1)
+        return f1_score(y, (self.predictor.predict(xgb.DMatrix(X)) > 0.5) * 1)
 
     def n_leaves_per_tree(self):
         df = self.predictor.trees_to_dataframe()

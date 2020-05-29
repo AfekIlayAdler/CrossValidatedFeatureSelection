@@ -64,7 +64,7 @@ class SklearnGbmWrapper:
         return sqrt(mean(square(y - self.predictor.predict(X))))
 
     def compute_f1(self, X, y):
-        f1_score(y, (self.predictor.predict(X) > 0.5) * 1)
+        return f1_score(y, (self.predictor.predict(X) > 0.5) * 1)
 
     def n_leaves_per_tree(self):
         n_leaves_per_tree = Series({i: tree[0].tree_.n_leaves for i, tree in enumerate(self.predictor.estimators_)})

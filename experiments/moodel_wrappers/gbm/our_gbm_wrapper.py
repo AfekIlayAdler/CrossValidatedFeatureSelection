@@ -54,7 +54,7 @@ class OurGbmWrapper:
         return sqrt(mean(square(y - self.predictor.predict(X))))
 
     def compute_f1(self, X, y):
-        f1_score(y, (self.predictor.predict(X) > 0.5) * 1)
+        return f1_score(y, (self.predictor.predict(X) > 0.5) * 1)
 
     def get_n_trees(self):
         return self.predictor.n_trees

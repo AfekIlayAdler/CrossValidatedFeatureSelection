@@ -67,7 +67,7 @@ class CatboostGbmWrapper:
         return sqrt(mean(square(y - self.predictor.predict(self.get_pool(X)))))
 
     def compute_f1(self, X, y):
-        f1_score(y, (self.predictor.predict(self.get_pool(X)) > 0.5) * 1)
+        return f1_score(y, (self.predictor.predict(self.get_pool(X)) > 0.5) * 1)
 
     def get_n_trees(self):
         return self.predictor.tree_count_

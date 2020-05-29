@@ -1,8 +1,8 @@
 from pathlib import Path
-from experiments.moodel_wrappers.gbm import CatboostGbmRegressorWrapper, XgboostGbmRegressorWrapper, SklearnGbmRegressorWrapper, \
-    OurGbmRegressorWrapper, LgbmGbmRegressorWrapper
+from experiments.moodel_wrappers.gbm import *
 
-from experiments.moodel_wrappers.random_forest import OurRfWrapperClassifier, OurRfWrapperRegressor,SklearnRfRegressorWrapper, SklearnRfClassifierWrapper
+from experiments.moodel_wrappers.random_forest import OurRfWrapperClassifier, OurRfWrapperRegressor, \
+    SklearnRfRegressorWrapper, SklearnRfClassifierWrapper
 
 # gbm
 MAX_DEPTH = 3
@@ -21,12 +21,20 @@ Y_COL_NAME = 'y'
 N_ROWS = 10 ** 3
 
 GBM_REGRESSORS = {
-    'lgbm' : LgbmGbmRegressorWrapper,
+    'lgbm': LgbmGbmRegressorWrapper,
     'xgboost': XgboostGbmRegressorWrapper,
     'catboost': CatboostGbmRegressorWrapper,
     'sklearn': SklearnGbmRegressorWrapper,
-    'ours': OurGbmRegressorWrapper}
+    'ours_vanilla': OurFastGbmRegressorWrapper,
+    'ours_kfold': OurFastKfoldGbmRegressorWrapper}
 
+GBM_CLASSIFIERS = {
+    'lgbm': LgbmGbmClassifierWrapper,
+    'xgboost': XgboostGbmClassifierWrapper,
+    'catboost': CatboostGbmClassifierWrapper,
+    'sklearn': SklearnGbmClassifierWrapper,
+    'ours_vanilla': OurFastGbmClassifierWrapper,
+    'ours_kfold': OurFastKfoldGbmClassifierWrapper}
 
 RF_REGRESSORS = {
     'sklearn': SklearnRfRegressorWrapper,
@@ -35,4 +43,3 @@ RF_REGRESSORS = {
 RF_CLASSIFIERS = {
     'sklearn': SklearnRfClassifierWrapper,
     'ours': OurRfWrapperClassifier}
-

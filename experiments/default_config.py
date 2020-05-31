@@ -11,8 +11,8 @@ LEARNING_RATE = 0.1
 SUBSAMPLE = 0.5
 
 # io
-MODELS_DIR = Path(F"results/models/")
-RESULTS_DIR = Path(F"results/experiments_results/")
+# MODELS_DIR = Path(F"results/models/")
+RESULTS_DIR = Path(F"results/")
 
 # data
 CATEGORY_COLUMN_NAME = 'category'

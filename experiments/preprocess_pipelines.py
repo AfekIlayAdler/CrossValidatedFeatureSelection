@@ -15,11 +15,11 @@ def get_preprocessing_pipeline(p: float, columns: List[str]):
         ("TransformObjectsToCatOrBool", ObjectsColumnaAsType()),
         ("ImputeAndTransform",
          PandasFeatureUnion(transformer_list=[
-             # ("numeric_features", make_pipeline(
-             #     TypeSelector(number),
-             #     PandasImputer(strategy="mean"),
-             #     PandasStandardScaler()
-             # )),
+             ("numeric_features", make_pipeline(
+                 TypeSelector(number),
+                 PandasImputer(strategy="mean"),
+                 PandasStandardScaler()
+             )),
              ("categorical_features", make_pipeline(
                  TypeSelector("category"),
                  CatToInt(),
@@ -27,9 +27,9 @@ def get_preprocessing_pipeline(p: float, columns: List[str]):
                  ColAsInt()
 
              )),
-             # ("boolean_features", make_pipeline(
-             #     TypeSelector("bool"),
-             # ))
+             ("boolean_features", make_pipeline(
+                 TypeSelector("bool"),
+             ))
          ]))
     ])
 
@@ -42,3 +42,12 @@ def get_preprocessing_pipeline_only_cat(p: float, columns: List[str]):
         ("CatToInt", CatToInt()),
         ("Impute", PandasImputer(strategy="most_frequent")),
         ("ColAsInt", ColAsInt())])
+
+
+def get_preprocessing_pipeline_only_num(p: float, columns: List[str]):
+    return Pipeline([
+        ("RemoveColumns", ColumnRemover(columns)),
+        ("NanRemover", NanColumnsRemover(p)),
+        ("TransformObjectsToCatOrBool", ObjectsColumnaAsType()),
+        ("Impute", PandasImputer(strategy="mean")),
+        ("Scale", PandasStandardScaler())])

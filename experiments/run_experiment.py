@@ -1,12 +1,52 @@
+from datetime import time
+
 from numpy import nan
+from numpy.random import seed
 from pandas import Series, DataFrame
 from sklearn.model_selection import train_test_split
 
 from algorithms import LEARNING_RATE
 from algorithms.Tree.fast_tree.bining import BinMapper
 from algorithms.Tree.utils import get_num_cols
-from experiments.default_config import VAL_RATIO, MAX_DEPTH, N_ESTIMATORS, LEARNING_RATE
-from experiments.utils import transform_categorical_features
+from experiments.default_config import VAL_RATIO, MAX_DEPTH, N_ESTIMATORS, LEARNING_RATE, RESULTS_DIR
+from experiments.utils import transform_categorical_features, make_dirs
+
+
+def run_experiments(config):
+    if config.one_hot:
+        variants = ['mean_imputing', 'one_hot']
+    else:
+        variants = ['mean_imputing']
+
+    models = dict(lgbm=['vanilla'], xgboost=variants, catboost=['vanilla'], sklearn=variants,
+                  ours_vanilla=['_'], ours_kfold=['_'])
+
+    start = time()
+    make_dirs([RESULTS_DIR])
+    for model_name, model_variants in models.items():
+        print(f'Working on experiment : {model_name}')
+        exp_dir = RESULTS_DIR / model_name
+        make_dirs([exp_dir])
+        for variant in model_variants:
+            exp_name = F"{model_name}_{variant}.csv"
+            exp_results_path = exp_dir / exp_name
+            if exp_results_path.exists():
+                continue
+
+            seed(config.seed)
+            run_experiment(
+                model_name=model_name,
+                variant=variant,
+                get_data=config.get_x_y,
+                compute_permutation=config.compute_permutation,
+                save_results=config.save_results,
+                contains_num_features=config.contains_num_features,
+                preprocessing_pipeline=config.preprocessing_pipeline(0.5, config.columns_to_remove),
+                models_dict=config.predictors,
+                exp_results_path=exp_results_path)
+
+    end = time()
+    print(f"run took {end - start} seconds")
 
 
 def run_experiment(

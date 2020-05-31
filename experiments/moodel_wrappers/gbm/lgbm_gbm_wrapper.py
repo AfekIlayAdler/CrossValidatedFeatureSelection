@@ -7,7 +7,8 @@ from pandas import Series, DataFrame
 from sklearn.metrics import f1_score
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
-from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values
+from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values, regression_error, \
+    classification_error
 from experiments.utils import get_categorical_col_indexes, get_categorical_colnames, get_non_categorical_colnames
 
 """
@@ -128,7 +129,7 @@ def trees_to_dataframe(self):
 
 class LgbmGbmWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, subsample, model):
+                 learning_rate, subsample, model, compute_error):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.numeric_col_names = get_non_categorical_colnames(dtypes)
@@ -141,6 +142,7 @@ class LgbmGbmWrapper:
             bagging_freq=1,
             bagging_fraction=subsample)
         self.x_train_cols = None
+        self.compute_error = compute_error
 
     def fit(self, X, y):
         self.x_train_cols = X.columns
@@ -167,29 +169,26 @@ class LgbmGbmWrapper:
 
     def compute_fi_permutation(self, X, y):
         results = {}
-        mse = mean(square(y - self.predictor.predict(X)))
+        true_error = self.compute_error(y, self.predict(X))
         # TODO: shuffling doesn't work here for some reason
         for col in X.columns:
             permutated_x = X.copy()
             random_feature_mse = []
             for i in range(N_PERMUTATIONS):
                 permutated_x[col] = Series(permutation(permutated_x[col]), dtype=X[col].dtype)
-                random_feature_mse.append(mean(square(y - self.predictor.predict(permutated_x))))
-            results[col] = mean(array(random_feature_mse)) - mse
+                random_feature_mse.append(self.compute_error(y, self.predict(permutated_x)))
+            results[col] = mean(array(random_feature_mse)) - true_error
         fi = Series(self.group_fi(results))
         return normalize_series(fi)
+
+    def predict(self, X: DataFrame):
+        return self.predictor.predict(X)
 
     def compute_fi_shap(self, X, y):
         # TODO: fix it
         fi = get_shap_values(self.predictor, X, self.x_train_cols).to_dict()
         fi = Series(self.group_fi(fi))
         return fi
-
-    def compute_rmse(self, X, y):
-        return sqrt(mean(square(y - self.predictor.predict(X))))
-
-    def compute_f1(self, X, y):
-        return f1_score(y, (self.predictor.predict(X) > 0.5) * 1)
 
     def n_leaves_per_tree(self):
         df = trees_to_dataframe(self.predictor.booster_)
@@ -215,7 +214,8 @@ class LgbmGbmRegressorWrapper(LgbmGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=lgb.LGBMRegressor)
+            model=lgb.LGBMRegressor,
+            compute_error=regression_error)
 
 
 class LgbmGbmClassifierWrapper(LgbmGbmWrapper):
@@ -228,4 +228,5 @@ class LgbmGbmClassifierWrapper(LgbmGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=lgb.LGBMClassifier)
+            model=lgb.LGBMClassifier,
+            compute_error=classification_error)

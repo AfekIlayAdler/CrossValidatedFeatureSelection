@@ -1,29 +1,31 @@
 import multiprocessing
+from time import time
 
 from numpy import mean, square, array, nan, sqrt
 from numpy.random import permutation
-from pandas import Series
+from pandas import Series, DataFrame
 from sklearn.metrics import f1_score
 
 from algorithms import CartGradientBoostingRegressorKfold, CartGradientBoostingRegressor, \
     FastCartGradientBoostingRegressorKfold, FastCartGradientBoostingRegressor, CartGradientBoostingClassifier, \
     CartGradientBoostingClassifierKfold, FastCartGradientBoostingClassifier, FastCartGradientBoostingClassifierKfold
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
-from experiments.moodel_wrappers.wrapper_utils import normalize_series
+from experiments.moodel_wrappers.wrapper_utils import normalize_series, regression_error, classification_error
 
 
-def worker(X, y, col, predict):
+def worker(X, y, col, predict, compute_error):
     permutated_x = X.copy()
     permutated_x[col] = permutation(permutated_x[col])
-    return mean(square(y - predict(permutated_x)))
+    return compute_error(y,predict(permutated_x))
 
 
 class OurGbmWrapper:
     def __init__(self, max_depth, n_estimators,
-                 learning_rate, subsample, model):
+                 learning_rate, subsample, model, compute_error):
         self.predictor = model(max_depth=max_depth, n_estimators=n_estimators,
                                learning_rate=learning_rate, subsample=subsample, min_samples_leaf=5)
         self.x_train_cols = None
+        self.compute_error = compute_error
 
     def fit(self, X, y):
         self.x_train_cols = X.columns
@@ -35,26 +37,25 @@ class OurGbmWrapper:
 
     def compute_fi_permutation(self, X, y):
         results = {}
-        mse = mean(square(y - self.predictor.predict(X)))
+        true_error = self.compute_error(y, self.predict(X))
         for col in X.columns:
-            args = [(X, y, col, self.predictor.predict) for _ in range(N_PERMUTATIONS)]
+            start = time()
+            args = [(X, y, col, self.predict, self.compute_error) for _ in range(N_PERMUTATIONS)]
 
-            with multiprocessing.Pool() as process_pool:
+            with multiprocessing.Pool(4) as process_pool:
                 prm_results = process_pool.starmap(worker, args)
 
-            results[col] = mean(array(prm_results)) - mse
-            print(col)
+            results[col] = mean(array(prm_results)) - true_error
+            end = time()
+            print(f"{col} run took {end - start}")
         fi = Series(results)
         return normalize_series(fi)
 
+    def predict(self, X: DataFrame):
+        return self.predictor.predict(X)
+
     def compute_fi_shap(self, X, y):
         return Series({col: nan for col in self.x_train_cols})
-
-    def compute_rmse(self, X, y):
-        return sqrt(mean(square(y - self.predictor.predict(X))))
-
-    def compute_f1(self, X, y):
-        return f1_score(y, (self.predictor.predict(X) > 0.5) * 1)
 
     def get_n_trees(self):
         return self.predictor.n_trees
@@ -71,7 +72,9 @@ class OurGbmRegressorWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=CartGradientBoostingRegressor)
+            model=CartGradientBoostingRegressor,
+            compute_error=regression_error
+        )
 
 
 class OurKfoldGbmRegressorWrapper(OurGbmWrapper):
@@ -82,7 +85,8 @@ class OurKfoldGbmRegressorWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=CartGradientBoostingRegressorKfold)
+            model=CartGradientBoostingRegressorKfold,
+            compute_error=regression_error)
 
 
 class OurFastGbmRegressorWrapper(OurGbmWrapper):
@@ -93,7 +97,8 @@ class OurFastGbmRegressorWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=FastCartGradientBoostingRegressor)
+            model=FastCartGradientBoostingRegressor,
+            compute_error=regression_error)
 
 
 class OurFastKfoldGbmRegressorWrapper(OurGbmWrapper):
@@ -104,7 +109,8 @@ class OurFastKfoldGbmRegressorWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=FastCartGradientBoostingRegressorKfold)
+            model=FastCartGradientBoostingRegressorKfold,
+            compute_error=regression_error)
 
 
 class OurGbmClassifierWrapper(OurGbmWrapper):
@@ -115,7 +121,8 @@ class OurGbmClassifierWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=CartGradientBoostingClassifier)
+            model=CartGradientBoostingClassifier,
+            compute_error=classification_error)
 
 
 class OurKfoldGbmClassifierWrapper(OurGbmWrapper):
@@ -126,7 +133,8 @@ class OurKfoldGbmClassifierWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=CartGradientBoostingClassifierKfold)
+            model=CartGradientBoostingClassifierKfold,
+            compute_error=classification_error)
 
 
 class OurFastGbmClassifierWrapper(OurGbmWrapper):
@@ -137,7 +145,8 @@ class OurFastGbmClassifierWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=FastCartGradientBoostingClassifier)
+            model=FastCartGradientBoostingClassifier,
+            compute_error=classification_error)
 
 
 class OurFastKfoldGbmClassifierWrapper(OurGbmWrapper):
@@ -148,4 +157,5 @@ class OurFastKfoldGbmClassifierWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=FastCartGradientBoostingClassifierKfold)
+            model=FastCartGradientBoostingClassifierKfold,
+            compute_error=classification_error)

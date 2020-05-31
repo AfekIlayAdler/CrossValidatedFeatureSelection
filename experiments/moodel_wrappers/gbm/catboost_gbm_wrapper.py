@@ -1,17 +1,18 @@
 from catboost import CatBoostRegressor, Pool, CatBoostClassifier
 from numpy import mean, square, array, sqrt
 from numpy.random import permutation
-from pandas import Series
+from pandas import Series, DataFrame
 from sklearn.metrics import f1_score
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
-from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values
+from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values, regression_error, \
+    classification_error
 from experiments.utils import get_categorical_col_indexes, get_categorical_colnames
 
 
 class CatboostGbmWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, subsample, model):
+                 learning_rate, subsample, model, compute_error):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.variant = variant
@@ -29,6 +30,7 @@ class CatboostGbmWrapper:
                                                 bootstrap_type='Bernoulli')
 
         self.x_train_cols = None
+        self.compute_error = compute_error
 
     def fit(self, X, y):
         self.x_train_cols = X.columns
@@ -46,34 +48,30 @@ class CatboostGbmWrapper:
 
     def compute_fi_permutation(self, X, y):
         results = {}
-        mse = mean(square(y - self.predictor.predict(self.get_pool(X))))
+        true_error = self.compute_error(y, self.predict(X))
         for col in X.columns:
             permutated_x = X.copy()
             random_feature_mse = []
             for i in range(N_PERMUTATIONS):
                 permutated_x[col] = permutation(permutated_x[col])
-                temp_x = self.get_pool(permutated_x)
-                random_feature_mse.append(mean(square(y - self.predictor.predict(temp_x))))
-            results[col] = mean(array(random_feature_mse)) - mse
+                random_feature_mse.append(self.compute_error(y, self.predict(permutated_x)))
+            results[col] = mean(array(random_feature_mse)) - true_error
         fi = Series(results)
         return normalize_series(fi)
+
+    def predict(self, X: DataFrame):
+        return self.predictor.predict(self.get_pool(X))
 
     def compute_fi_shap(self, X, y):
         # TODO: fix it
         pool = Pool(X, y, cat_features=self.cat_col_indexes)
         return get_shap_values(self.predictor, pool, self.x_train_cols)
 
-    def compute_rmse(self, X, y):
-        return sqrt(mean(square(y - self.predictor.predict(self.get_pool(X)))))
-
-    def compute_f1(self, X, y):
-        return f1_score(y, (self.predictor.predict(self.get_pool(X)) > 0.5) * 1)
-
     def get_n_trees(self):
         return self.predictor.tree_count_
 
     def get_n_leaves(self):
-        return self.predictor.tree_count_ * (2 ** self.predictor._init_params['depth'])
+        return self.predictor.tree_count_ * (2 ** self.predictor.init_params['depth'])
 
 
 class CatboostGbmRegressorWrapper(CatboostGbmWrapper):
@@ -86,7 +84,8 @@ class CatboostGbmRegressorWrapper(CatboostGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model='regression')
+            model='regression',
+            compute_error=regression_error)
 
 
 class CatboostGbmClassifierWrapper(CatboostGbmWrapper):
@@ -99,4 +98,5 @@ class CatboostGbmClassifierWrapper(CatboostGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model='classification')
+            model='classification',
+            compute_error=classification_error)

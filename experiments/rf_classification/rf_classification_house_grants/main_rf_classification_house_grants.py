@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from experiments.default_config import RESULTS_DIR, VAL_RATIO, MODELS_DIR, N_ESTIMATORS, \
     RF_REGRESSORS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline
-from experiments.rf_classification_house_grants.config_rf_classification_house_grants import DATA_PATH, \
+from experiments.rf_classification.rf_classification_house_grants.config_rf_classification_house_grants import DATA_PATH, \
     Y_COL_NAME, MODELS, N_EXPERIMENTS, DEBUG, N_PROCESS, PROPORTION_NAN_COL_REMOVE, COLUMNS_TO_REMOVE
 from experiments.utils import make_dirs, transform_categorical_features
 

@@ -1,4 +1,4 @@
-from datetime import time
+from time import time
 
 from numpy import nan
 from numpy.random import seed
@@ -59,7 +59,8 @@ def run_experiment(
     X_train = preprocessing_pipeline.transform(X_train)
     X_test = preprocessing_pipeline.transform(X_test)
 
-    if contains_num_features and model_name == 'ours':
+    if contains_num_features and model_name.startswith('ours'):
+        print("binning data")
         num_cols = get_num_cols(X.dtypes)
         bin_mapper = BinMapper(max_bins=256, random_state=42)
         X_train.loc[:, num_cols] = bin_mapper.fit_transform(X_train.loc[:, num_cols].values)

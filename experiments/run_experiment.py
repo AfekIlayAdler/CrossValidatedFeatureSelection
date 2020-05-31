@@ -41,7 +41,7 @@ def run_experiment(
         permutation_test = empty_dict
 
     results = dict(model=f"{model_name}_{variant}", ntrees=model.get_n_trees(), nleaves=model.get_n_leaves(),
-                   error=model.compute_error(y_test, test_prediction, False), gain=model.compute_fi_gain().to_dict(),
+                   error=model.compute_error(y_test, test_prediction), gain=model.compute_fi_gain().to_dict(),
                    permutation_train=permutation_train, permutation_test=permutation_test,
                    shap_train=model.compute_fi_shap(X_train, y_train).to_dict(),
                    shap_test=model.compute_fi_shap(X_test, y_test).to_dict())

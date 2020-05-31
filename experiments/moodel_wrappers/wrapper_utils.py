@@ -17,12 +17,10 @@ def get_shap_values(model, x, columns):
     return abs_shap_values.mean() / abs_shap_values.mean().sum()
 
 
-def regression_error(y_true, y_pred, inverse=False):
+def regression_error(y_true, y_pred):
     return mean_squared_error(y_true, y_pred)
 
 
-def classification_error(y_true, y_pred, inverse=True):
+def classification_error(y_true, y_pred):
     f1 = f1_score(y_true, (y_pred > 0.5) * 1)
-    if inverse:
-        return 1 - f1
-    return f1
+    return 1 - f1

@@ -165,9 +165,9 @@ class BaseTree:
             next_level_nodes = []
             for node, node_data in level_nodes:  # only on internal nodes
                 if isinstance(node, NumericBinaryNode):
-                    left_indices = x[node.field] <= node.thr
+                    left_indices = node_data[node.field] <= node.thr
                 else:
-                    left_indices = x[node.field].apply(lambda x: True if x in node.left_values else False)
+                    left_indices = node_data[node.field].apply(lambda x: True if x in node.left_values else False)
                 # right_indices = left_indices.apply()
                 data_dict = dict(tuple(node_data.groupby(left_indices)))
                 for child in [(node.left, True), (node.right, False)]:

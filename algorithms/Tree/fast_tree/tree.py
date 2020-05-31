@@ -4,7 +4,7 @@ from typing import List
 from numba import types
 from numba.typed import Dict
 from numpy import zeros, array, random, max, uint16, ones
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, concat
 
 from algorithms.Tree.fast_tree.bining import BinMapper
 from algorithms.Tree.fast_tree.get_best_split import get_best_split
@@ -19,7 +19,6 @@ from algorithms.Tree.config import MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DEC
 from algorithms.Tree.node import InternalNode, Leaf, CategoricalBinaryNode, NumericBinaryNode
 from algorithms.Tree.utils import get_cols_dtypes, classification_impurity, regression_impurity, get_cat_num_cols, \
     get_max_value_per_cat
-
 
 
 class BaseTree:
@@ -126,7 +125,7 @@ class BaseTree:
         if self.cat_cols:
             X_cat = X[self.cat_cols].values.astype(uint16)
             self.n_unique_values_per_cat = get_max_value_per_cat(X_cat)
-            self.cat_n_bins = max(self.n_unique_values_per_cat) +1
+            self.cat_n_bins = max(self.n_unique_values_per_cat) + 1
             cat_grad_data = compute_grad_sum(X_cat, y, self.cat_n_bins)
         if self.num_cols:
             X_num = X[self.num_cols].values
@@ -141,18 +140,50 @@ class BaseTree:
         else:
             self.number_nodes_and_update_tree_data()
 
+    # def predict(self, x: DataFrame, is_binned: False) -> array:
+    #     if not is_binned:
+    #         X.loc[:, self.num_cols] = self.bin_mapper.transform(X, X.loc[:, self.num_cols])
+    #     records = x.to_dict('records')
+    #     results = zeros(len(records))
+    #     for i, row in enumerate(records):
+    #         node = self.root
+    #         while isinstance(node, InternalNode):
+    #             value = row[node.field]
+    #             node = node.get_child(value)
+    #         results[i] = node.prediction
+    #     return results
+
     def predict(self, x: DataFrame, is_binned: False) -> array:
         if not is_binned:
             X.loc[:, self.num_cols] = self.bin_mapper.transform(X, X.loc[:, self.num_cols])
-        records = x.to_dict('records')
-        results = zeros(len(records))
-        for i, row in enumerate(records):
-            node = self.root
-            while isinstance(node, InternalNode):
-                value = row[node.field]
-                node = node.get_child(value)
-            results[i] = node.prediction
-        return results
+        queue = [[(self.root, x)]]
+        leaves = []
+        if isinstance(self.root, Leaf):
+            return ones(x.shape[0]) * self.root.prediction
+        while queue:
+            level_nodes = queue.pop(0)
+            next_level_nodes = []
+            for node, node_data in level_nodes:  # only on internal nodes
+                if isinstance(node, NumericBinaryNode):
+                    left_indices = x[node.field] <= node.thr
+                else:
+                    left_indices = x[node.field].apply(lambda x: True if x in node.left_values else False)
+                # right_indices = left_indices.apply()
+                data_dict = dict(tuple(node_data.groupby(left_indices)))
+                for child in [(node.left, True), (node.right, False)]:
+                    if data_dict.get(child[1]) is None:
+                        continue
+                    if isinstance(child[0], Leaf):
+                        leaves.append((child[0], data_dict.get(child[1])))
+                    else:
+                        next_level_nodes.append((child[0], data_dict.get(child[1])))
+            if next_level_nodes:
+                queue.append(next_level_nodes)
+        results = []
+        for leaf, leaf_data in leaves:
+            results.append(Series(leaf.prediction, leaf_data.index))
+        results = concat(results)
+        return results[x.index].values
 
     def number_nodes_and_update_tree_data(self):
         self.root.number = 0

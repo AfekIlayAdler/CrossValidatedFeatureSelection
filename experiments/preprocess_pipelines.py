@@ -8,7 +8,7 @@ from PandasSklearnPipeline.dataframe_transformers import NanColumnsRemover, Obje
 from PandasSklearnPipeline.pandas_feature_union import PandasFeatureUnion
 
 
-def get_preprocessing_pipeline(p: float, columns : List[str]):
+def get_preprocessing_pipeline(p: float, columns: List[str]):
     return Pipeline([
         ("RemoveColumns", ColumnRemover(columns)),
         ("NanRemover", NanColumnsRemover(p)),
@@ -32,3 +32,13 @@ def get_preprocessing_pipeline(p: float, columns : List[str]):
              # ))
          ]))
     ])
+
+
+def get_preprocessing_pipeline_only_cat(p: float, columns: List[str]):
+    return Pipeline([
+        ("RemoveColumns", ColumnRemover(columns)),
+        ("NanRemover", NanColumnsRemover(p)),
+        ("TransformObjectsToCatOrBool", ObjectsColumnaAsType()),
+        ("CatToInt", CatToInt()),
+        ("Impute", PandasImputer(strategy="most_frequent")),
+        ("ColAsInt", ColAsInt())])

@@ -1,10 +1,9 @@
 import multiprocessing
 from time import time
 
-from numpy import mean, square, array, nan, sqrt
+from numpy import mean, array, nan
 from numpy.random import permutation
 from pandas import Series, DataFrame
-from sklearn.metrics import f1_score
 
 from algorithms import CartGradientBoostingRegressorKfold, CartGradientBoostingRegressor, \
     FastCartGradientBoostingRegressorKfold, FastCartGradientBoostingRegressor, CartGradientBoostingClassifier, \
@@ -36,9 +35,12 @@ class OurGbmWrapper:
         return normalize_series(fi)
 
     def compute_fi_permutation(self, X, y):
-        results = {}
+        results = {col: 0 for col in self.x_train_cols}
         true_error = self.compute_error(y, self.predict(X))
-        for col in X.columns:
+        # get only features that got positive fi_gain
+        gain_fi = self.compute_fi_gain()
+        positive_fi_gain = gain_fi[gain_fi > 0].index.tolist()
+        for col in positive_fi_gain:
             start = time()
             args = [(X, y, col, self.predict, self.compute_error) for _ in range(N_PERMUTATIONS)]
 

@@ -52,6 +52,7 @@ class GradientBoostingMachine:
         predictions = tree.predict(x, is_binned = self.bin_numeric_values)
         # TODO: assumption: all leaves provide unique value
         self.trees.append(tree)
+        print(tree.n_leaves)
         return predictions
 
     def fit(self, data: DataFrame):

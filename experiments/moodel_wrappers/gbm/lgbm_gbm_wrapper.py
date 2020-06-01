@@ -135,12 +135,19 @@ class LgbmGbmWrapper:
         self.numeric_col_names = get_non_categorical_colnames(dtypes)
         self.variant = variant
         self.n_estimators = n_estimators
-        self.predictor = model(
-            learning_rate=learning_rate,
-            max_depth=max_depth,
-            importance_type='gain',
-            bagging_freq=1,
-            bagging_fraction=subsample)
+        if subsample != 1.0:
+            self.predictor = model(
+                learning_rate=learning_rate,
+                max_depth=max_depth,
+                importance_type='gain',
+                bagging_freq=1,
+                bagging_fraction=subsample)
+        else:
+            self.predictor = model(
+                learning_rate=learning_rate,
+                max_depth=max_depth,
+                importance_type='gain')
+
         self.x_train_cols = None
         self.compute_error = compute_error
 

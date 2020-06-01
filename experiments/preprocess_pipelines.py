@@ -4,7 +4,7 @@ from numpy import number
 from sklearn.pipeline import Pipeline, make_pipeline
 
 from PandasSklearnPipeline.dataframe_transformers import NanColumnsRemover, ObjectsColumnaAsType, TypeSelector, \
-    PandasImputer, PandasStandardScaler, ColumnRemover, CatToInt, ColAsInt
+    PandasImputer, PandasStandardScaler, ColumnRemover, CatToInt, ColAsCategory
 from PandasSklearnPipeline.pandas_feature_union import PandasFeatureUnion
 
 
@@ -24,7 +24,7 @@ def get_preprocessing_pipeline(p: float, columns: List[str]):
                  TypeSelector("category"),
                  CatToInt(),
                  PandasImputer(strategy="most_frequent"),
-                 ColAsInt()
+                 ColAsCategory()
 
              )),
              ("boolean_features", make_pipeline(
@@ -41,7 +41,7 @@ def get_preprocessing_pipeline_only_cat(p: float, columns: List[str]):
         ("TransformObjectsToCatOrBool", ObjectsColumnaAsType()),
         ("CatToInt", CatToInt()),
         ("Impute", PandasImputer(strategy="most_frequent")),
-        ("ColAsInt", ColAsInt())])
+        ("ColAsInt", ColAsCategory())])
 
 
 def get_preprocessing_pipeline_only_num(p: float, columns: List[str]):

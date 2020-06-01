@@ -144,13 +144,13 @@ class FastCartGradientBoostingClassifier(GradientBoostingClassifier):
 
 class FastCartGradientBoostingClassifierKfold(GradientBoostingClassifier):
     def __init__(self,
-                 n_estimators=N_ESTIMATORS,
-                 learning_rate=LEARNING_RATE,
-                 min_samples_leaf=MIN_SAMPLES_LEAF,
-                 max_depth=MAX_DEPTH,
-                 min_impurity_decrease=MIN_IMPURITY_DECREASE,
-                 min_samples_split=MIN_SAMPLES_SPLIT,
-                 subsample=SUBSAMPLE):
+                 n_estimators: object = N_ESTIMATORS,
+                 learning_rate: object = LEARNING_RATE,
+                 min_samples_leaf: object = MIN_SAMPLES_LEAF,
+                 max_depth: object = MAX_DEPTH,
+                 min_impurity_decrease: object = MIN_IMPURITY_DECREASE,
+                 min_samples_split: object = MIN_SAMPLES_SPLIT,
+                 subsample: object = SUBSAMPLE) -> object:
         super().__init__(
             base_tree=FastCartRegressionTreeKFold,
             n_estimators=n_estimators,

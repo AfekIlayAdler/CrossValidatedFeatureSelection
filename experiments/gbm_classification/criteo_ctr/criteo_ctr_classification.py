@@ -9,7 +9,7 @@ from experiments.run_experiment import run_experiments
 
 
 def get_x_y():
-    project_root = Path(__file__).parent.parent.parent
+    project_root = Path(__file__).parent.parent.parent.parent
     y_col_name = 'click'
     train = read_csv(project_root / 'datasets/criteo_ctr_prediction/train_10000.csv')
     y = train[y_col_name]

@@ -1,8 +1,9 @@
 from time import time
 
-from numpy import nan
+from numpy import nan, unique
 from numpy.random import seed
 from pandas import Series, DataFrame
+from sklearn.metrics import log_loss
 from sklearn.model_selection import train_test_split
 
 from algorithms import LEARNING_RATE
@@ -72,7 +73,6 @@ def run_experiment(
                                     learning_rate=LEARNING_RATE, subsample=1.)
     model.fit(X_train, y_train)
 
-    test_prediction = model.predict(X_test)
     if compute_permutation:
         permutation_train = model.compute_fi_permutation(X_train, y_train).to_dict()
         permutation_test = model.compute_fi_permutation(X_test, y_test).to_dict()
@@ -81,10 +81,20 @@ def run_experiment(
         permutation_train = empty_dict
         permutation_test = empty_dict
 
+    is_classification = len(unique(y)) == 2
+    if is_classification:
+        test_prediction = model.predict_proba(X_test)
+        logloss = log_loss(y_test, test_prediction)
+    else:
+        test_prediction = model.predict(X_test)
+        logloss = nan
     results = dict(model=f"{model_name}_{variant}", ntrees=model.get_n_trees(), nleaves=model.get_n_leaves(),
-                   error=model.compute_error(y_test, test_prediction), gain=model.compute_fi_gain().to_dict(),
+                   error=model.compute_error(y_test, test_prediction), logloss=logloss,
+                   gain=model.compute_fi_gain().to_dict(),
                    permutation_train=permutation_train, permutation_test=permutation_test,
                    shap_train=model.compute_fi_shap(X_train, y_train).to_dict(),
-                   shap_test=model.compute_fi_shap(X_test, y_test).to_dict())
+                   shap_test=model.compute_fi_shap(X_test, y_test).to_dict(),
+                   test_labels=y_test.values.tolist(), predictions=test_prediction)
+
     if save_results:
         DataFrame(Series(results)).T.to_csv(exp_results_path)

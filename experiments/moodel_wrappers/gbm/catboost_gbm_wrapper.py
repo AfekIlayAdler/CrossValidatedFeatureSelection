@@ -1,8 +1,7 @@
 from catboost import CatBoostRegressor, Pool, CatBoostClassifier
-from numpy import mean, square, array, sqrt
+from numpy import mean, array
 from numpy.random import permutation
 from pandas import Series, DataFrame
-from sklearn.metrics import f1_score
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
 from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values, regression_error, \
@@ -17,17 +16,29 @@ class CatboostGbmWrapper:
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.variant = variant
         if model == 'regression':
-            self.predictor = CatBoostRegressor(iterations=n_estimators,
-                                               depth=max_depth,
-                                               learning_rate=learning_rate,
-                                               loss_function='RMSE', logging_level='Silent', subsample=subsample,
-                                               bootstrap_type='Bernoulli')
+            # I have encounterd slightly different behaviour so added it to be sure
+            if subsample != 1.0:
+                self.predictor = CatBoostRegressor(iterations=n_estimators,
+                                                   depth=max_depth,
+                                                   learning_rate=learning_rate,
+                                                   loss_function='RMSE', logging_level='Silent', subsample=subsample,
+                                                   bootstrap_type='Bernoulli')
+            else:
+                self.predictor = CatBoostRegressor(iterations=n_estimators,
+                                                   depth=max_depth,
+                                                   learning_rate=learning_rate,
+                                                   loss_function='RMSE', logging_level='Silent')
         else:
-            self.predictor = CatBoostClassifier(iterations=n_estimators,
-                                                depth=max_depth,
-                                                learning_rate=learning_rate,
-                                                logging_level='Silent', subsample=subsample,
-                                                bootstrap_type='Bernoulli')
+            if subsample != 1.0:
+                self.predictor = CatBoostClassifier(iterations=n_estimators,
+                                                    depth=max_depth,
+                                                    learning_rate=learning_rate,
+                                                    logging_level='Silent', subsample=subsample,
+                                                    bootstrap_type='Bernoulli')
+            else:
+                self.predictor = CatBoostClassifier(iterations=n_estimators,
+                                                    depth=max_depth,
+                                                    learning_rate=learning_rate, logging_level='Silent')
 
         self.x_train_cols = None
         self.compute_error = compute_error

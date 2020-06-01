@@ -1,11 +1,17 @@
 from pathlib import Path
 
+from numpy import arange
 from pandas import read_csv
 
 from experiments.config_object import Config
 from experiments.default_config import GBM_REGRESSORS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_cat
 from experiments.run_experiment import run_experiments
+
+"""
+regression data set. original contains 81 features. I choose only the categorical ones.
+1460 records
+"""
 
 
 def get_x_y():
@@ -19,15 +25,19 @@ def get_x_y():
            'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1',
            'BsmtFinType2', 'Heating', 'HeatingQC', 'Electrical', 'KitchenQual', 'Functional', 'FireplaceQu',
            'GarageType', 'GarageFinish', 'GarageQual', 'GarageCond', 'PavedDrive', 'SaleType', 'SaleCondition']]
+    if WITH_INDEX:
+        X['index'] = arange(X.shape[0])
+        X['index'] = X['index'].astype('category')
     return X, y
 
 
 if __name__ == '__main__':
+    WITH_INDEX = True
     config = Config(
         compute_permutation=True,
         save_results=True,
-        one_hot=True,
-        contains_num_features=True,
+        one_hot=not WITH_INDEX,
+        contains_num_features=False,
         seed=7,
         predictors=GBM_REGRESSORS,
         columns_to_remove=['Id'],

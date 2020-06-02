@@ -109,3 +109,6 @@ class SklearnGbmClassifierWrapper(SklearnGbmWrapper):
             subsample=subsample,
             model=GradientBoostingClassifier,
             compute_error= classification_error)
+
+    def predict_proba(self, X: DataFrame):
+        return self.predictor.predict_proba(X)[:,1]

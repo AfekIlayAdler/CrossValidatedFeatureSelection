@@ -237,3 +237,6 @@ class LgbmGbmClassifierWrapper(LgbmGbmWrapper):
             subsample=subsample,
             model=lgb.LGBMClassifier,
             compute_error=classification_error)
+
+    def predict_proba(self, X: DataFrame):
+        return self.predictor.predict_proba(X)[:,1]

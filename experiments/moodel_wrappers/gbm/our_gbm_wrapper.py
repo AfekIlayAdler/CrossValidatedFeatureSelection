@@ -15,12 +15,11 @@ from experiments.moodel_wrappers.wrapper_utils import normalize_series, regressi
 def worker(X, y, col, predict, compute_error):
     permutated_x = X.copy()
     permutated_x[col] = permutation(permutated_x[col])
-    return compute_error(y,predict(permutated_x))
+    return compute_error(y, predict(permutated_x))
 
 
 class OurGbmWrapper:
-    def __init__(self, max_depth, n_estimators,
-                 learning_rate, subsample, model, compute_error):
+    def __init__(self, max_depth, n_estimators, learning_rate, subsample, model, compute_error):
         self.predictor = model(max_depth=max_depth, n_estimators=n_estimators,
                                learning_rate=learning_rate, subsample=subsample, min_samples_leaf=5)
         self.x_train_cols = None
@@ -66,7 +65,37 @@ class OurGbmWrapper:
         return sum([tree.n_leaves for tree in self.predictor.trees])
 
 
-class OurGbmRegressorWrapper(OurGbmWrapper):
+class RegressionWrapper(OurGbmWrapper):
+    def __init__(self, max_depth, n_estimators,
+                 learning_rate, subsample, model):
+        super().__init__(
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            model=model,
+            compute_error=regression_error)
+
+
+class ClassificationWrapper(OurGbmWrapper):
+    def __init__(self, max_depth, n_estimators,
+                 learning_rate, subsample, model):
+        super().__init__(
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            model=model,
+            compute_error=classification_error)
+
+    def predict(self, X: DataFrame):
+        return (self.predictor.predict(X) > 0.5)*1
+
+    def predict_proba(self, X: DataFrame):
+        return self.predictor.predict(X)
+
+
+class OurGbmRegressorWrapper(RegressionWrapper):
     def __init__(self, variant, dtypes, max_depth, n_estimators,
                  learning_rate, subsample):
         super().__init__(
@@ -75,11 +104,10 @@ class OurGbmRegressorWrapper(OurGbmWrapper):
             learning_rate=learning_rate,
             subsample=subsample,
             model=CartGradientBoostingRegressor,
-            compute_error=regression_error
         )
 
 
-class OurKfoldGbmRegressorWrapper(OurGbmWrapper):
+class OurKfoldGbmRegressorWrapper(RegressionWrapper):
     def __init__(self, variant, dtypes, max_depth, n_estimators,
                  learning_rate, subsample):
         super().__init__(
@@ -87,11 +115,10 @@ class OurKfoldGbmRegressorWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=CartGradientBoostingRegressorKfold,
-            compute_error=regression_error)
+            model=CartGradientBoostingRegressorKfold)
 
 
-class OurFastGbmRegressorWrapper(OurGbmWrapper):
+class OurFastGbmRegressorWrapper(RegressionWrapper):
     def __init__(self, variant, dtypes, max_depth, n_estimators,
                  learning_rate, subsample):
         super().__init__(
@@ -99,11 +126,10 @@ class OurFastGbmRegressorWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=FastCartGradientBoostingRegressor,
-            compute_error=regression_error)
+            model=FastCartGradientBoostingRegressor)
 
 
-class OurFastKfoldGbmRegressorWrapper(OurGbmWrapper):
+class OurFastKfoldGbmRegressorWrapper(RegressionWrapper):
     def __init__(self, variant, dtypes, max_depth, n_estimators,
                  learning_rate, subsample):
         super().__init__(
@@ -111,11 +137,10 @@ class OurFastKfoldGbmRegressorWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=FastCartGradientBoostingRegressorKfold,
-            compute_error=regression_error)
+            model=FastCartGradientBoostingRegressorKfold)
 
 
-class OurGbmClassifierWrapper(OurGbmWrapper):
+class OurGbmClassifierWrapper(ClassificationWrapper):
     def __init__(self, variant, dtypes, max_depth, n_estimators,
                  learning_rate, subsample):
         super().__init__(
@@ -123,11 +148,10 @@ class OurGbmClassifierWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=CartGradientBoostingClassifier,
-            compute_error=classification_error)
+            model=CartGradientBoostingClassifier)
 
 
-class OurKfoldGbmClassifierWrapper(OurGbmWrapper):
+class OurKfoldGbmClassifierWrapper(ClassificationWrapper):
     def __init__(self, variant, dtypes, max_depth, n_estimators,
                  learning_rate, subsample):
         super().__init__(
@@ -135,11 +159,10 @@ class OurKfoldGbmClassifierWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=CartGradientBoostingClassifierKfold,
-            compute_error=classification_error)
+            model=CartGradientBoostingClassifierKfold)
 
 
-class OurFastGbmClassifierWrapper(OurGbmWrapper):
+class OurFastGbmClassifierWrapper(ClassificationWrapper):
     def __init__(self, variant, dtypes, max_depth, n_estimators,
                  learning_rate, subsample):
         super().__init__(
@@ -147,11 +170,10 @@ class OurFastGbmClassifierWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=FastCartGradientBoostingClassifier,
-            compute_error=classification_error)
+            model=FastCartGradientBoostingClassifier)
 
 
-class OurFastKfoldGbmClassifierWrapper(OurGbmWrapper):
+class OurFastKfoldGbmClassifierWrapper(ClassificationWrapper):
     def __init__(self, variant, dtypes, max_depth, n_estimators,
                  learning_rate, subsample):
         super().__init__(
@@ -159,5 +181,4 @@ class OurFastKfoldGbmClassifierWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=FastCartGradientBoostingClassifierKfold,
-            compute_error=classification_error)
+            model=FastCartGradientBoostingClassifierKfold)

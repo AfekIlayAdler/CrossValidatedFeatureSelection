@@ -111,3 +111,7 @@ class CatboostGbmClassifierWrapper(CatboostGbmWrapper):
             subsample=subsample,
             model='classification',
             compute_error=classification_error)
+
+    def predict_proba(self, X: DataFrame):
+        return self.predictor.predict_proba(self.get_pool(X))[:,1]
+

@@ -109,3 +109,9 @@ class XgboostGbmClassifierWrapper(XgboostGbmWrapper):
             subsample=subsample,
             objective='binary:logistic',
             compute_error= classification_error)
+
+    def predict(self, X: DataFrame):
+        return (self.predictor.predict(xgb.DMatrix(X)) > 0.5)*1
+
+    def predict_proba(self, X: DataFrame):
+        return self.predictor.predict(xgb.DMatrix(X))

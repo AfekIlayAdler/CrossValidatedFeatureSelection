@@ -59,20 +59,20 @@ def run_experiment(
     preprocessing_pipeline.fit(X_train)
     X_train = preprocessing_pipeline.transform(X_train)
     X_test = preprocessing_pipeline.transform(X_test)
-
+    original_dtypes = X_train.dtypes
     if contains_num_features and model_name.startswith('ours'):
         print("binning data")
-        num_cols = get_num_cols(X.dtypes)
+        num_cols = get_num_cols(original_dtypes)
         bin_mapper = BinMapper(max_bins=256, random_state=42)
         X_train.loc[:, num_cols] = bin_mapper.fit_transform(X_train.loc[:, num_cols].values)
         X_test.loc[:, num_cols] = bin_mapper.transform(X_test.loc[:, num_cols].values)
 
-    original_dtypes = X_train.dtypes
     X_train, X_test = transform_categorical_features(X_train, X_test, y_train, variant)
     model = models_dict[model_name](variant, original_dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
                                     learning_rate=LEARNING_RATE, subsample=1.)
     model.fit(X_train, y_train)
 
+    test_prediction = model.predict(X_test)
     if compute_permutation:
         permutation_train = model.compute_fi_permutation(X_train, y_train).to_dict()
         permutation_test = model.compute_fi_permutation(X_test, y_test).to_dict()
@@ -83,10 +83,9 @@ def run_experiment(
 
     is_classification = len(unique(y)) == 2
     if is_classification:
-        test_prediction = model.predict_proba(X_test)
-        logloss = log_loss(y_test, test_prediction)
+        probabiliteis = model.predict_proba(X_test)
+        logloss = log_loss(y_test, probabiliteis)
     else:
-        test_prediction = model.predict(X_test)
         logloss = nan
     results = dict(model=f"{model_name}_{variant}", ntrees=model.get_n_trees(), nleaves=model.get_n_leaves(),
                    error=model.compute_error(y_test, test_prediction), logloss=logloss,

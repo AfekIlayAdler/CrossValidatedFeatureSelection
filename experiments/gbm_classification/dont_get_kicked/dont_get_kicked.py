@@ -24,7 +24,7 @@ if __name__ == '__main__':
         compute_permutation=True,
         save_results=True,
         one_hot=False,  # takes to much time
-        contains_num_features=False,
+        contains_num_features=True,
         seed=7,
         predictors=GBM_CLASSIFIERS,
         columns_to_remove=['PurchDate', 'RefId'],

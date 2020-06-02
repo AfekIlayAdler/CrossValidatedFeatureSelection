@@ -18,6 +18,7 @@ def get_x_y_breast_cancer():
     y = Series(data['target'])
     return X, y
 
+
 def get_x_y_bike_rentals():
     def preprocess_df(df):
         df['datetime'] = to_datetime(df['datetime']).dt.hour
@@ -52,7 +53,15 @@ def create_x_y(regression=True):
     return df, Series(y)
 
 
-
+def get_x_y_amazon():
+    project_root = Path(__file__).parent.parent
+    y_col_name = 'ACTION'
+    train = read_csv(project_root / 'datasets/amazon_from_catboost_paper/train.csv')
+    y = train[y_col_name]
+    X = train.drop(columns=[y_col_name])
+    for col in X.columns:
+        X[col] = X[col].astype('category')
+    return X, y
 # def create_x_y(regression=True):
 #     df = pd.DataFrame()
 #     n_rows = 10 ** 3
@@ -113,7 +122,6 @@ def create_x_y(regression=True):
 #         df[col + n_numeric_cols] = df[col + n_numeric_cols].astype('category')
 #     y = np.random.random(n_rows) if regression else np.random.randint(2, size=n_rows)
 #     return df, pd.Series(y)
-
 
 
 # def create_x_y():

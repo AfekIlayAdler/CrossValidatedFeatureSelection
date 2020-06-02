@@ -5,7 +5,8 @@ from pandas import read_csv, Series, DataFrame
 from sklearn.metrics import log_loss
 from sklearn.model_selection import train_test_split
 
-from algorithms import FastCartGradientBoostingClassifierKfold, FastCartGradientBoostingClassifier
+from algorithms import FastCartGradientBoostingClassifierKfold, FastCartGradientBoostingClassifier, \
+    CartGradientBoostingClassifierKfold, CartGradientBoostingClassifier
 from experiments.default_config import VAL_RATIO
 
 
@@ -22,7 +23,7 @@ def get_x_y():
 
 def run_experiment(
         model_name: str, get_data: callable, compute_permutation: bool, \
-        save_results: bool, model,exp_results_path):
+        save_results: bool, model, exp_results_path):
     X, y = get_data()
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=VAL_RATIO)
     original_dtypes = X_train.dtypes
@@ -39,7 +40,8 @@ def run_experiment(
 
     is_classification = len(unique(y)) == 2
     if is_classification:
-        logloss = log_loss(y_test, test_prediction)
+        probabiliteis = model.predict_proba(X_test)
+        logloss = log_loss(y_test, probabiliteis)
     else:
         logloss = nan
     results = dict(model=f"{model_name}", ntrees=model.get_n_trees(), nleaves=model.get_n_leaves(),
@@ -55,21 +57,21 @@ def run_experiment(
 
 if __name__ == '__main__':
     models = {
-        'kfold_no_hyper': FastCartGradientBoostingClassifierKfold(max_depth=100,
-                                                                  n_estimators=1000,
-                                                                  learning_rate=0.1),
+        'kfold_no_hyper': CartGradientBoostingClassifierKfold(max_depth=100,
+                                                              n_estimators=1000,
+                                                              learning_rate=0.1),
 
-        'kfold_height': FastCartGradientBoostingClassifierKfold(max_depth=3,
-                                                                n_estimators=1000,
-                                                                learning_rate=0.1),
-        'vanilla_no_hyper': FastCartGradientBoostingClassifier(max_depth=100,
-                                                               n_estimators=1000,
-                                                               learning_rate=0.1),
+        'kfold_height': CartGradientBoostingClassifierKfold(max_depth=3,
+                                                            n_estimators=1000,
+                                                            learning_rate=0.1),
+        'vanilla_no_hyper': CartGradientBoostingClassifier(max_depth=100,
+                                                           n_estimators=1000,
+                                                           learning_rate=0.1),
 
-        'vanilla_height': FastCartGradientBoostingClassifier(max_depth=3,
-                                                             n_estimators=1000,
-                                                             learning_rate=0.1)}
+        'vanilla_height': CartGradientBoostingClassifier(max_depth=3,
+                                                         n_estimators=1000,
+                                                         learning_rate=0.1)}
 
     for exp_name, model in models.items():
         print(f"run exp {exp_name}")
-        run_experiment(exp_name,get_x_y, False, True, model, f"{exp_name}.csv" )
+        run_experiment(exp_name, get_x_y, False, True, model, f"{exp_name}.csv")

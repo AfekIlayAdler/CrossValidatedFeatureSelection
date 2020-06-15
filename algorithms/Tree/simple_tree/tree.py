@@ -64,7 +64,6 @@ class BaseTree:
         node.purity = impurity
         node.left = self._grow_tree(X[indices['left']], y[indices['left']], depth + 1)
         node.right = self._grow_tree(X[indices['right']], y[indices['right']], depth + 1)
-        self.n_leaves += 2
         node.add_depth(depth)
         return node
 
@@ -110,6 +109,7 @@ class BaseTree:
                     self.children_left.append(node.left.number)
                     self.children_right.append(node.right.number)
                 else:
+                    self.n_leaves += 1
                     self.features.append(-2)
                     self.children_left.append(-1)
                     self.children_right.append(-1)

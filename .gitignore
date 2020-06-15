@@ -22,3 +22,4 @@
 *pycache*
 /experiments/gbm_classification/breast_cancer/cb_model.json
 /experiments/gbm_classification/criteo_ctr/cb_model.json
+/experiments/gbm_classification/dont_get_kicked/cb_model.json

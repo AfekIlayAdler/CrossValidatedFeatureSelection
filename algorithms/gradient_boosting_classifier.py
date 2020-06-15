@@ -1,7 +1,7 @@
 from .Tree import Leaf, FastCartRegressionTreeKFold, FastCartRegressionTree, CartRegressionTree, \
     CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
 
-from numpy import mean, array, log, exp, zeros, ones
+from numpy import mean, array, log, exp, zeros, ones, sum, isnan
 from pandas import DataFrame
 
 from .gradient_boosting_abstract import GradientBoostingMachine
@@ -72,9 +72,11 @@ class GradientBoostingClassifier(GradientBoostingMachine):
         prediction = ones(data.shape[0]) * self.base_prediction
         for tree_index, tree in enumerate(self.trees):
             tree_predictions = tree.predict(data, is_binned=self.bin_numeric_values)
+            # print(tree_index, sum(isnan(tree_predictions)))
             for i in range(tree_predictions.size):
                 tree_predictions[i] = self.predictions_to_step_size_dicts[tree_index].get(tree_predictions[i])
             prediction += self.learning_rate * tree_predictions
+            print(tree_index, sum(isnan(prediction)))
         return 1 / (1 + exp(-2 * prediction))
 
 

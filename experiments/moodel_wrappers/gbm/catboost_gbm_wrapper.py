@@ -39,6 +39,7 @@ class CatboostGbmWrapper:
                 self.predictor = CatBoostClassifier(iterations=n_estimators,
                                                     depth=max_depth,
                                                     learning_rate=learning_rate, logging_level='Silent')
+                # TODO: remove plain
 
         self.x_train_cols = None
         self.compute_error = compute_error
@@ -113,5 +114,4 @@ class CatboostGbmClassifierWrapper(CatboostGbmWrapper):
             compute_error=classification_error)
 
     def predict_proba(self, X: DataFrame):
-        return self.predictor.predict_proba(self.get_pool(X))[:,1]
-
+        return self.predictor.predict_proba(self.get_pool(X))[:, 1]

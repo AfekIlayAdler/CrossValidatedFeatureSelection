@@ -34,9 +34,8 @@ if __name__ == "__main__":
     if FAST:
         num_cols = get_num_cols(X.dtypes)
         bin_mapper = BinMapper(max_bins=256, random_state=42)
-        X_train.loc[:,num_cols]= bin_mapper.fit_transform(X_train.loc[:,num_cols].values)
-        X_test.loc[:,num_cols] = bin_mapper.transform(X_test.loc[:,num_cols].values)
-
+        X_train.loc[:, num_cols] = bin_mapper.fit_transform(X_train.loc[:, num_cols].values)
+        X_test.loc[:, num_cols] = bin_mapper.transform(X_test.loc[:, num_cols].values)
 
     reg.fit(X_train, y_train)
     end = time.time()

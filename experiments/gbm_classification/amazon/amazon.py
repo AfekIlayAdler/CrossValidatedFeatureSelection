@@ -21,7 +21,7 @@ def get_x_y():
 
 if __name__ == '__main__':
     config = Config(
-        compute_permutation=True,
+        compute_permutation=False,
         save_results=True,
         one_hot=False,  # takes to much time
         contains_num_features=False,
@@ -30,4 +30,4 @@ if __name__ == '__main__':
         columns_to_remove=[],
         get_x_y=get_x_y,
         preprocessing_pipeline=get_preprocessing_pipeline_only_cat)
-    run_experiments(config)
+    run_experiments(config, 30)

@@ -5,6 +5,7 @@ from numpy.random import seed
 from pandas import Series, DataFrame
 from sklearn.metrics import log_loss
 from sklearn.model_selection import train_test_split
+from sklearn.tree import plot_tree
 
 from algorithms import LEARNING_RATE
 from algorithms.Tree.fast_tree.bining import BinMapper
@@ -13,7 +14,7 @@ from experiments.default_config import VAL_RATIO, MAX_DEPTH, N_ESTIMATORS, LEARN
 from experiments.utils import transform_categorical_features, make_dirs
 
 
-def run_experiments(config):
+def run_experiments(config, n_experiments=1):
     if config.one_hot:
         variants = ['mean_imputing', 'one_hot']
     else:
@@ -29,22 +30,28 @@ def run_experiments(config):
         exp_dir = RESULTS_DIR / model_name
         make_dirs([exp_dir])
         for variant in model_variants:
-            exp_name = F"{model_name}_{variant}.csv"
-            exp_results_path = exp_dir / exp_name
-            if exp_results_path.exists():
-                continue
+            for exp in range(n_experiments):
+                if exp == 0:
+                    exp_name = F"{model_name}_{variant}.csv"
+                    seed(config.seed)
+                else:
+                    exp_name = F"{model_name}_{variant}_{exp}.csv"
+                    seed(exp)
 
-            seed(config.seed)
-            run_experiment(
-                model_name=model_name,
-                variant=variant,
-                get_data=config.get_x_y,
-                compute_permutation=config.compute_permutation,
-                save_results=config.save_results,
-                contains_num_features=config.contains_num_features,
-                preprocessing_pipeline=config.preprocessing_pipeline(0.5, config.columns_to_remove),
-                models_dict=config.predictors,
-                exp_results_path=exp_results_path)
+                exp_results_path = exp_dir / exp_name
+                if exp_results_path.exists():
+                    continue
+
+                run_experiment(
+                    model_name=model_name,
+                    variant=variant,
+                    get_data=config.get_x_y,
+                    compute_permutation=config.compute_permutation,
+                    save_results=config.save_results,
+                    contains_num_features=config.contains_num_features,
+                    preprocessing_pipeline=config.preprocessing_pipeline(0.5, config.columns_to_remove),
+                    models_dict=config.predictors,
+                    exp_results_path=exp_results_path)
 
     end = time()
     print(f"run took {end - start} seconds")
@@ -71,7 +78,6 @@ def run_experiment(
     model = models_dict[model_name](variant, original_dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
                                     learning_rate=LEARNING_RATE, subsample=1.)
     model.fit(X_train, y_train)
-
     test_prediction = model.predict(X_test)
     if compute_permutation:
         permutation_train = model.compute_fi_permutation(X_train, y_train).to_dict()

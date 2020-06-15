@@ -24,9 +24,10 @@ def get_x_y():
         X = df[['datetime', 'season', 'holiday', 'workingday', 'weather', 'temp',
                 'atemp', 'humidity', 'windspeed']]
         y = df['count']
-
-        X['index'] = random.randint(0, X.shape[0] // 4, X.shape[0])
+        ######
+        X['index'] = random.randint(0, 2000, X.shape[0])
         X['index'] = X['index'].astype('category')
+        y = y + random.random(X.shape[0]) * 100 +100*X['index'].isin(list(range(1000)))
         return X, y
 
     project_root = Path(__file__).parent.parent.parent.parent
@@ -37,7 +38,7 @@ def get_x_y():
 
 if __name__ == '__main__':
     config = Config(
-        compute_permutation=True,
+        compute_permutation=False,
         save_results=True,
         one_hot=False, # when we add index then it takes to much time..
         contains_num_features=True,

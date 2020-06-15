@@ -11,12 +11,7 @@ from experiments.run_experiment import run_experiments
 def get_x_y():
     project_root = Path(__file__).parent.parent.parent.parent
     y_col_name = 'y'
-    columns = ['age', 'workclass', 'fnlwgt', 'education', 'education_num', 'marital_status', 'occupation',
-               'relationship', 'race', 'sex', 'capital_gain', 'capital_loss'
-        , 'hours_per_week', 'native_country', 'y']
-
-    train = read_csv(project_root / "datasets/adult/adult.data", header=None)
-    train.columns = columns
+    train = read_csv(project_root / "datasets/kdd_upselling/train.csv")
     y = Series(factorize(train[y_col_name])[0])
     X = train.drop(columns=[y_col_name])
     for col in X.select_dtypes(include=['O']).columns.tolist():
@@ -26,9 +21,9 @@ def get_x_y():
 
 if __name__ == '__main__':
     config = Config(
-        compute_permutation=True,
+        compute_permutation=False,
         save_results=True,
-        one_hot=True,
+        one_hot=False,
         contains_num_features=True,
         seed=7,
         predictors=GBM_CLASSIFIERS,

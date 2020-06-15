@@ -10,12 +10,13 @@ from algorithms import FastCartGradientBoostingClassifierKfold, FastCartGradient
     CartGradientBoostingClassifierKfold, CartGradientBoostingClassifier, TreeVisualizer
 from experiments.default_config import VAL_RATIO
 from experiments.moodel_wrappers.wrapper_utils import normalize_series
+from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_cat
 
 
 def get_x_y():
     project_root = Path(__file__).parent.parent.parent.parent
-    y_col_name = 'ACTION'
-    train = read_csv(project_root / 'datasets/amazon_from_catboost_paper/train.csv')
+    y_col_name = 'click'
+    train = read_csv(project_root / 'datasets/criteo_ctr_prediction/train_10000.csv')
     y = train[y_col_name]
     X = train.drop(columns=[y_col_name])
     for col in X.columns:
@@ -29,6 +30,9 @@ def run_experiment(
     X, y = get_data()
     seed(7)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=VAL_RATIO)
+    preprocessing_pipeline.fit(X_train)
+    X_train = preprocessing_pipeline.transform(X_train)
+    X_test = preprocessing_pipeline.transform(X_test)
     original_dtypes = X_train.dtypes
     model.fit(X_train, y_train)
     test_prediction = model.predict(X_test)
@@ -86,6 +90,7 @@ if __name__ == '__main__':
     for exp_name, model in models.items():
         print(f"run exp {exp_name}")
         output_path = Path(f"{exp_name}.csv")
+        preprocessing_pipeline = get_preprocessing_pipeline_only_cat(0.5, ['hour', 'id', 'Unnamed: 0'])
         if output_path.exists():
             continue
         run_experiment(exp_name, get_x_y, False, True, model, output_path)

@@ -25,9 +25,9 @@ def get_x_y():
                 'atemp', 'humidity', 'windspeed']]
         y = df['count']
         ######
-        X['index'] = random.randint(0, 2000, X.shape[0])
+        X['index'] = random.randint(0, 100, X.shape[0])
         X['index'] = X['index'].astype('category')
-        y = y + random.random(X.shape[0]) * 100 +100*X['index'].isin(list(range(1000)))
+        y = y + random.random(X.shape[0]) * 100
         return X, y
 
     project_root = Path(__file__).parent.parent.parent.parent

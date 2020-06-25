@@ -13,8 +13,10 @@ def get_x_y():
     X = DataFrame(data['data'], columns=data['feature_names'])
     y = Series(data['target'])
     if WITH_INDEX:
-        X['index'] = random.randint(0, X.shape[0] // 2, X.shape[0])
+        # X['index'] = random.randint(0, X.shape[0] // 2, X.shape[0])
+        X['index'] = random.randint(0, 50, X.shape[0])
         X['index'] = X['index'].astype('category')
+
     return X, y
 
 

@@ -16,10 +16,13 @@ from experiments.utils import transform_categorical_features, make_dirs
 
 def run_experiments(config):
     variants = ['mean_imputing', 'one_hot'] if config.one_hot else ['mean_imputing']
+    if config.predictors.is_gbm:
+        models = dict(lgbm=['vanilla'], xgboost=variants,
+                      catboost=['vanilla'], sklearn=variants,
+                      ours_vanilla=['_'], ours_kfold=['_'])
 
-    models = dict(lgbm=['vanilla'], xgboost=variants,
-                  catboost=['vanilla'], sklearn=variants,
-                  ours_vanilla=['_'], ours_kfold=['_'])
+    else:
+        models = dict(sklearn=variants, ours_vanilla=['_'], ours_kfold=['_'])
 
     start = time()
     make_dirs([RESULTS_DIR])
@@ -45,7 +48,7 @@ def run_experiments(config):
                         save_results=config.save_results,
                         contains_num_features=config.contains_num_features,
                         preprocessing_pipeline=config.preprocessing_pipeline(0.5, config.columns_to_remove),
-                        models_dict=config.predictors,
+                        models=config.predictors,
                         exp_results_path=exp_results_path)
 
             else:
@@ -62,7 +65,7 @@ def run_experiments(config):
                     save_results=config.save_results,
                     contains_num_features=config.contains_num_features,
                     preprocessing_pipeline=config.preprocessing_pipeline(0.5, config.columns_to_remove),
-                    models_dict=config.predictors,
+                    models=config.predictors,
                     exp_results_path=exp_results_path)
 
     end = time()
@@ -77,7 +80,7 @@ def run_experiment(
         save_results: bool,
         contains_num_features: bool,
         preprocessing_pipeline,
-        models_dict,
+        models,
         exp_results_path):
     X_train, X_test, y_train, y_test = data
     preprocessing_pipeline.fit(X_train)
@@ -92,8 +95,12 @@ def run_experiment(
         X_test.loc[:, num_cols] = bin_mapper.transform(X_test.loc[:, num_cols].values)
 
     X_train, X_test = transform_categorical_features(X_train, X_test, y_train, variant)
-    model = models_dict[model_name](variant, original_dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
-                                    learning_rate=LEARNING_RATE, subsample=1.)
+    if models.is_gbm:
+        model = models.models_dict[model_name](variant, original_dtypes, max_depth=MAX_DEPTH, n_estimators=N_ESTIMATORS,
+                                               learning_rate=LEARNING_RATE, subsample=1.)
+    else:
+        model = models.models_dict[model_name](variant, original_dtypes, N_ESTIMATORS)
+
     model.fit(X_train, y_train)
     test_prediction = model.predict(X_test)
     if compute_permutation:

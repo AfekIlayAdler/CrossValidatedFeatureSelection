@@ -1,11 +1,11 @@
 from time import time
+from typing import Tuple
 
 from numpy import nan, unique
 from numpy.random import seed
 from pandas import Series, DataFrame
 from sklearn.metrics import log_loss
-from sklearn.model_selection import train_test_split
-from sklearn.tree import plot_tree
+from sklearn.model_selection import train_test_split, KFold
 
 from algorithms import LEARNING_RATE
 from algorithms.Tree.fast_tree.bining import BinMapper
@@ -14,13 +14,11 @@ from experiments.default_config import VAL_RATIO, MAX_DEPTH, N_ESTIMATORS, LEARN
 from experiments.utils import transform_categorical_features, make_dirs
 
 
-def run_experiments(config, n_experiments=1):
-    if config.one_hot:
-        variants = ['mean_imputing', 'one_hot']
-    else:
-        variants = ['mean_imputing']
+def run_experiments(config):
+    variants = ['mean_imputing', 'one_hot'] if config.one_hot else ['mean_imputing']
 
-    models = dict(lgbm=['vanilla'], xgboost=variants, catboost=['vanilla'], sklearn=variants,
+    models = dict(lgbm=['vanilla'], xgboost=variants,
+                  catboost=['vanilla'], sklearn=variants,
                   ours_vanilla=['_'], ours_kfold=['_'])
 
     start = time()
@@ -30,22 +28,36 @@ def run_experiments(config, n_experiments=1):
         exp_dir = RESULTS_DIR / model_name
         make_dirs([exp_dir])
         for variant in model_variants:
-            for exp in range(n_experiments):
-                if exp == 0:
-                    exp_name = F"{model_name}_{variant}.csv"
-                    seed(config.seed)
-                else:
-                    exp_name = F"{model_name}_{variant}_{exp}.csv"
-                    seed(exp)
+            X, y = config.get_x_y()
+            if config.kfold_flag:
+                kf = KFold(n_splits=config.kfolds, shuffle=True, random_state=config.seed)
+                for i, (train_index, test_index) in enumerate(kf.split(X)):
+                    exp_name = F"{model_name}_{variant}_{i}.csv"
+                    exp_results_path = exp_dir / exp_name
+                    if exp_results_path.exists():
+                        continue
+                    data = X.iloc[train_index], X.iloc[test_index], y.iloc[train_index], y.iloc[test_index]
+                    run_experiment(
+                        model_name=model_name,
+                        variant=variant,
+                        data=data,
+                        compute_permutation=config.compute_permutation,
+                        save_results=config.save_results,
+                        contains_num_features=config.contains_num_features,
+                        preprocessing_pipeline=config.preprocessing_pipeline(0.5, config.columns_to_remove),
+                        models_dict=config.predictors,
+                        exp_results_path=exp_results_path)
 
+            else:
+                exp_name = F"{model_name}_{variant}.csv"
+                seed(config.seed)
                 exp_results_path = exp_dir / exp_name
                 if exp_results_path.exists():
                     continue
-
                 run_experiment(
                     model_name=model_name,
                     variant=variant,
-                    get_data=config.get_x_y,
+                    data=train_test_split(X, y, test_size=VAL_RATIO),
                     compute_permutation=config.compute_permutation,
                     save_results=config.save_results,
                     contains_num_features=config.contains_num_features,
@@ -58,11 +70,16 @@ def run_experiments(config, n_experiments=1):
 
 
 def run_experiment(
-        model_name: str, variant: str, get_data: callable, compute_permutation: bool, \
-        save_results: bool, contains_num_features: bool, preprocessing_pipeline, models_dict,
+        model_name: str,
+        variant: str,
+        data: Tuple,
+        compute_permutation: bool,
+        save_results: bool,
+        contains_num_features: bool,
+        preprocessing_pipeline,
+        models_dict,
         exp_results_path):
-    X, y = get_data()
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=VAL_RATIO)
+    X_train, X_test, y_train, y_test = data
     preprocessing_pipeline.fit(X_train)
     X_train = preprocessing_pipeline.transform(X_train)
     X_test = preprocessing_pipeline.transform(X_test)
@@ -87,7 +104,7 @@ def run_experiment(
         permutation_train = empty_dict
         permutation_test = empty_dict
 
-    is_classification = len(unique(y)) == 2
+    is_classification = len(unique(y_train)) == 2
     if is_classification:
         probabiliteis = model.predict_proba(X_test)
         logloss = log_loss(y_test, probabiliteis)

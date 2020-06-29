@@ -1,8 +1,7 @@
-from numpy import mean, square, array, nan, sqrt
+from numpy import mean, array
 from numpy.random import permutation
 from pandas import Series, DataFrame
 from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
-from sklearn.metrics import f1_score
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
 from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values, classification_error, \
@@ -64,12 +63,6 @@ class SklearnGbmWrapper:
         fi = get_shap_values(self.predictor, X, self.x_train_cols).to_dict()
         fi = Series(self.group_fi(fi))
         return fi
-
-    def compute_rmse(self, X, y):
-        return sqrt(mean(square(y - self.predictor.predict(X))))
-
-    def compute_error(self, X, y):
-        return self.compute_error(y, self.predictor.predict(X))
 
     def n_leaves_per_tree(self):
         n_leaves_per_tree = Series({i: tree[0].tree_.n_leaves for i, tree in enumerate(self.predictor.estimators_)})

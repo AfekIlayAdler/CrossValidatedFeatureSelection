@@ -3,7 +3,7 @@ from pathlib import Path
 from pandas import read_csv, factorize, Series
 
 from experiments.config_object import Config
-from experiments.default_config import RF_REGRESSORS
+from experiments.default_config import RF_REGRESSORS, RF_CLASSIFIERS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline
 from experiments.run_experiment import run_experiments
 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         contains_num_features=True,
         seed=7,
         kfolds = 30,
-        predictors= RF_REGRESSORS,
+        predictors= RF_CLASSIFIERS,
         columns_to_remove=[],
         get_x_y=get_x_y,
         preprocessing_pipeline=get_preprocessing_pipeline)

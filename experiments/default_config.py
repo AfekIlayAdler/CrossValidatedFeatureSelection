@@ -1,10 +1,13 @@
 from pathlib import Path
+from typing import Dict
+
 from experiments.moodel_wrappers.gbm import *
-
-from experiments.moodel_wrappers.random_forest import OurRfWrapperClassifier, OurRfWrapperRegressor, \
-    SklearnRfRegressorWrapper, SklearnRfClassifierWrapper
-
+from experiments.moodel_wrappers.random_forest import SklearnRfRegressorWrapper, SklearnRfClassifierWrapper
 # gbm
+from experiments.moodel_wrappers.random_forest.our_rf_wrapper import OurFastRfRegressorWrapper, \
+    OurFastRfClassifierWrapper, OurFastKfoldRfClassifierWrapper, \
+    OurFastKfoldRfRegressorWrapper
+
 MAX_DEPTH = 3
 N_ESTIMATORS = 100
 LEARNING_RATE = 0.1
@@ -20,26 +23,35 @@ VAL_RATIO = 0.15
 Y_COL_NAME = 'y'
 N_ROWS = 10 ** 3
 
-GBM_REGRESSORS = {
+
+class Models:
+    def __init__(self, is_gbm: bool, models_dict: Dict):
+        self.is_gbm = is_gbm
+        self.models_dict = models_dict
+
+
+GBM_REGRESSORS = Models(True, {
     'lgbm': LgbmGbmRegressorWrapper,
     'xgboost': XgboostGbmRegressorWrapper,
     'catboost': CatboostGbmRegressorWrapper,
     'sklearn': SklearnGbmRegressorWrapper,
     'ours_vanilla': OurFastGbmRegressorWrapper,
-    'ours_kfold': OurFastKfoldGbmRegressorWrapper}
+    'ours_kfold': OurFastKfoldGbmRegressorWrapper})
 
-GBM_CLASSIFIERS = {
+GBM_CLASSIFIERS = Models(True, {
     'lgbm': LgbmGbmClassifierWrapper,
     'xgboost': XgboostGbmClassifierWrapper,
     'catboost': CatboostGbmClassifierWrapper,
     'sklearn': SklearnGbmClassifierWrapper,
     'ours_vanilla': OurFastGbmClassifierWrapper,
-    'ours_kfold': OurFastKfoldGbmClassifierWrapper}
+    'ours_kfold': OurFastKfoldGbmClassifierWrapper})
 
-RF_REGRESSORS = {
+RF_REGRESSORS = Models(False, {
     'sklearn': SklearnRfRegressorWrapper,
-    'ours': OurRfWrapperRegressor}
+    'ours_vanilla': OurFastRfRegressorWrapper,
+    'ours_kfold': OurFastKfoldRfRegressorWrapper})
 
-RF_CLASSIFIERS = {
+RF_CLASSIFIERS = Models(False, {
     'sklearn': SklearnRfClassifierWrapper,
-    'ours': OurRfWrapperClassifier}
+    'ours_vanilla': OurFastRfClassifierWrapper,
+    'ours_kfold': OurFastKfoldRfClassifierWrapper})

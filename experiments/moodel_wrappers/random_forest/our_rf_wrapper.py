@@ -1,19 +1,19 @@
 from numpy import nan, mean, array, square
 from numpy.random import permutation
-from pandas import Series
+from pandas import Series, DataFrame
 
-from algorithms import CartKfoldRandomForestClassifier, CartRandomForestClassifier, CartKfoldRandomForestRegressor, \
-    CartRandomForestRegressor
-from experiments.moodel_wrappers.random_forest.rf_wrapper_inteface import RfWrapperInterface
-from experiments.moodel_wrappers.wrapper_utils import normalize_series
+from algorithms import FastCartRandomForestClassifier, FastCartKfoldRandomForestClassifier, \
+    FastCartRandomForestRegressor, FastCartKfoldRandomForestRegressor, CartRandomForestClassifier, \
+    CartKfoldRandomForestClassifier, CartRandomForestRegressor, CartKfoldRandomForestRegressor
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
+from experiments.moodel_wrappers.wrapper_utils import normalize_series, regression_error, classification_error
 
 
-class OurRfWrapper(RfWrapperInterface):
-    def __init__(self):
-        self.variant = None
-        self.predictor = None
+class OurRfWrapper:
+    def __init__(self, model, compute_error):
+        self.predictor = model
         self.x_train_cols = None
+        self.compute_error = compute_error
 
     def fit(self, X, y):
         self.x_train_cols = X.columns
@@ -39,20 +39,73 @@ class OurRfWrapper(RfWrapperInterface):
     def compute_fi_shap(self, X, y):
         return Series({col: nan for col in self.x_train_cols})
 
+    def get_n_trees(self):
+        return self.predictor.n_estimators
 
-class OurRfWrapperClassifier(OurRfWrapper):
-
-    def __init__(self, variant, n_estimators):
-        self.variant = variant
-        model = CartKfoldRandomForestClassifier if variant == 'kfold' else CartRandomForestClassifier
-        self.predictor = model(n_estimators=n_estimators)
+    def get_n_leaves(self):
+        return sum([tree.n_leaves for tree in self.predictor.trees])
 
 
-class OurRfWrapperRegressor(OurRfWrapper):
+class RegressionWrapper(OurRfWrapper):
+    def __init__(self, model):
+        super().__init__(model, compute_error=regression_error)
 
-    def __init__(self, variant, n_estimators):
-        self.variant = variant
-        model = CartKfoldRandomForestRegressor if variant == 'kfold' else CartRandomForestRegressor
-        self.predictor = model(n_estimators=n_estimators)
+    def predict(self, X: DataFrame):
+        return self.predictor.predict(X)
 
 
+class ClassificationWrapper(OurRfWrapper):
+    def __init__(self, model):
+        super().__init__(model, compute_error=classification_error)
+
+    def predict(self, X: DataFrame):
+        return (self.predictor.predict(X) > 0.5) * 1
+
+    def predict_proba(self, X: DataFrame):
+        return self.predictor.predict(X)
+
+
+"""Based on fast trees"""
+
+
+class OurFastRfClassifierWrapper(ClassificationWrapper):
+    def __init__(self, variant, dtypes, n_estimators):
+        super().__init__(model=FastCartRandomForestClassifier(n_estimators=n_estimators))
+
+
+class OurFastKfoldRfClassifierWrapper(ClassificationWrapper):
+    def __init__(self, variant, dtypes, n_estimators):
+        super().__init__(model=FastCartKfoldRandomForestClassifier(n_estimators=n_estimators))
+
+
+class OurFastRfRegressorWrapper(RegressionWrapper):
+    def __init__(self, variant, dtypes, n_estimators):
+        super().__init__(model=FastCartRandomForestRegressor(n_estimators=n_estimators))
+
+
+class OurFastKfoldRfRegressorWrapper(RegressionWrapper):
+    def __init__(self, variant, dtypes, n_estimators):
+        super().__init__(model=FastCartKfoldRandomForestRegressor(n_estimators=n_estimators))
+
+
+"""Based on regular trees"""
+
+
+class OurRfClassifierWrapper(ClassificationWrapper):
+    def __init__(self, variant, dtypes, n_estimators):
+        super().__init__(model=CartRandomForestClassifier(n_estimators=n_estimators))
+
+
+class OurKfoldRfClassifierWrapper(ClassificationWrapper):
+    def __init__(self, variant, dtypes, n_estimators):
+        super().__init__(model=CartKfoldRandomForestClassifier(n_estimators=n_estimators))
+
+
+class OurRfRegressorWrapper(RegressionWrapper):
+    def __init__(self, variant, dtypes, n_estimators):
+        super().__init__(model=CartRandomForestRegressor(n_estimators=n_estimators))
+
+
+class OurKfoldRfRegressorWrapper(RegressionWrapper):
+    def __init__(self, variant, dtypes, n_estimators):
+        super().__init__(model=CartKfoldRandomForestRegressor(n_estimators=n_estimators))

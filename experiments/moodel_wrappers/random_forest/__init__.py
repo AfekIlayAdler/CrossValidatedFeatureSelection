@@ -1,2 +1,2 @@
-from .our_rf_wrapper import OurRfWrapperClassifier, OurRfWrapperRegressor
+from .our_rf_wrapper import OurRfClassifierWrapper, OurRfRegressorWrapper
 from .sklearn_rf_wrapper import SklearnRfRegressorWrapper, SklearnRfClassifierWrapper

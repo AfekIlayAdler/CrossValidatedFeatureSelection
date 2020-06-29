@@ -18,7 +18,7 @@ class KFoldGetNode(GetNode):
         else:
             left_n, right_n = left_val_response.size, right_val_response.size
             left_p, right_p = left_val_response.mean(), right_val_response.mean()
-            return left_n * left_p * (1 - left_p) + right_n * right_p(1 - right_p)
+            return left_n * left_p * (1 - left_p) + right_n * right_p*(1 - right_p)
 
     def get(self, x, y):
         validation_error = 0

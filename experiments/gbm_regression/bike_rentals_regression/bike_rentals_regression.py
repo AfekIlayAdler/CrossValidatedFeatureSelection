@@ -16,18 +16,17 @@ dataset from kaggle. contains both categorical and numerical features. ~11k samp
 def get_x_y():
     def preprocess_df(df):
         df['datetime'] = to_datetime(df['datetime']).dt.hour
-        df['datetime'] = df['datetime'].astype('category')
-        df['holiday'] = df['holiday'].astype('category')
-        df['season'] = df['season'].astype('category')
-        df['workingday'] = df['workingday'].astype('category')
-        df['weather'] = df['weather'].astype('category')
+        for col in ['datetime', 'holiday', 'season', 'workingday', 'weather']:
+            df[col] = df[col].astype('category')
         X = df[['datetime', 'season', 'holiday', 'workingday', 'weather', 'temp',
                 'atemp', 'humidity', 'windspeed']]
         y = df['count']
         ######
-        X['index'] = random.randint(0, 100, X.shape[0])
-        X['index'] = X['index'].astype('category')
-        y = y + random.random(X.shape[0]) * 100
+        X['index'] = random.random()
+        # X['index'] = random.randint(0, 500, X.shape[0])
+        # X['index'] = X['index'].astype('category')
+        # columns = ['index', 'temp', 'atemp', 'weather', 'humidity']
+        # X = X[columns]
         return X, y
 
     project_root = Path(__file__).parent.parent.parent.parent
@@ -38,11 +37,13 @@ def get_x_y():
 
 if __name__ == '__main__':
     config = Config(
-        compute_permutation=False,
+        kfold_flag=False,
+        compute_permutation=True,
         save_results=True,
-        one_hot=False, # when we add index then it takes to much time..
+        one_hot=False,  # when we add index then it takes to much time..
         contains_num_features=True,
         seed=7,
+        kfolds=30,
         predictors=GBM_REGRESSORS,
         columns_to_remove=[],
         get_x_y=get_x_y,

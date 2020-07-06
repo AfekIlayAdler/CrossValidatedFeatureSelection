@@ -5,6 +5,7 @@ from sklearn.metrics import mean_squared_error, f1_score
 
 def normalize_series(s):
     if s.sum() != 0:
+        s = s.apply(lambda x: max(x,0))
         return s / s.sum()
     return s
 

@@ -21,7 +21,7 @@ def get_x_y():
 
 if __name__ == '__main__':
     config = Config(
-        kfold_flag = True,
+        kfold_flag = False,
         compute_permutation=False,
         save_results=True,
         one_hot=False,  # takes to much time

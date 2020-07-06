@@ -20,6 +20,9 @@ def run_experiments(config):
         models = dict(lgbm=['vanilla'], xgboost=variants,
                       catboost=['vanilla'], sklearn=variants,
                       ours_vanilla=['_'], ours_kfold=['_'])
+        # models = dict(ours_kfold=['_'])
+
+
 
     else:
         models = dict(sklearn=variants, ours_vanilla=['_'], ours_kfold=['_'])
@@ -45,6 +48,29 @@ def run_experiments(config):
                         variant=variant,
                         data=data,
                         compute_permutation=config.compute_permutation,
+                        save_results=config.save_results,
+                        contains_num_features=config.contains_num_features,
+                        preprocessing_pipeline=config.preprocessing_pipeline(0.5, config.columns_to_remove),
+                        models=config.predictors,
+                        exp_results_path=exp_results_path)
+            elif config.drop_one_feature_flag:
+                for exp in ['all']+X.columns.tolist():
+                    if exp == 'all':
+                        exp_name = F"{model_name}_{variant}.csv"
+                        data = train_test_split(X, y, test_size=VAL_RATIO, random_state = config.seed)
+                        compute_permutation = True
+                    else:
+                        exp_name = F"{model_name}_{variant}_{exp}.csv"
+                        data = train_test_split(X.drop(columns = [exp]), y, test_size=VAL_RATIO, random_state = config.seed)
+                        compute_permutation = False
+                    exp_results_path = exp_dir / exp_name
+                    if exp_results_path.exists():
+                        continue
+                    run_experiment(
+                        model_name=model_name,
+                        variant=variant,
+                        data=data,
+                        compute_permutation=compute_permutation,
                         save_results=config.save_results,
                         contains_num_features=config.contains_num_features,
                         preprocessing_pipeline=config.preprocessing_pipeline(0.5, config.columns_to_remove),
@@ -107,7 +133,7 @@ def run_experiment(
         permutation_train = model.compute_fi_permutation(X_train, y_train).to_dict()
         permutation_test = model.compute_fi_permutation(X_test, y_test).to_dict()
     else:
-        empty_dict = Series({col: nan for col in original_dtypes})
+        empty_dict = Series({col: 0 for col in original_dtypes})
         permutation_train = empty_dict
         permutation_test = empty_dict
 

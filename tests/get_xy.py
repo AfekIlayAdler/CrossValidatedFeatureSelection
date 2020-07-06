@@ -1,8 +1,25 @@
 from pathlib import Path
 
-from numpy import random
+from numpy import random, zeros
 from pandas import DataFrame, Series, to_datetime, read_csv
 from sklearn.datasets import load_boston, load_breast_cancer
+
+
+def get_x_y_increasing_size():
+    X = DataFrame()
+    nrows = 10 ** 4
+    y = Series(zeros(nrows))
+    for i in range(1, 7):
+        X[i] = random.randint(0, 2 ** i, nrows)
+        X[i] = X[i].astype('category')
+        y += X[i].isin(list(range(2 ** (i - 1)))) * 0.5
+        # X[i] = random.random(nrows)
+        # y += (X[i] <= 0.5) * 0.5
+
+    # X[8] = random.random(nrows)
+    y += random.random(nrows)  # (X[8] <= 0.5) * 0.5 +
+    # y = Series(random.random(nrows))
+    return X, y
 
 
 def get_x_y_boston():
@@ -62,6 +79,7 @@ def get_x_y_amazon():
     for col in X.columns:
         X[col] = X[col].astype('category')
     return X, y
+
 # def create_x_y(regression=True):
 #     df = pd.DataFrame()
 #     n_rows = 10 ** 3

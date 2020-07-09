@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from numpy import random, zeros
-from pandas import DataFrame, Series, to_datetime, read_csv
+from pandas import DataFrame, Series, to_datetime, read_csv, factorize
 from sklearn.datasets import load_boston, load_breast_cancer
 
 
@@ -78,6 +78,22 @@ def get_x_y_amazon():
     X = train.drop(columns=[y_col_name])
     for col in X.columns:
         X[col] = X[col].astype('category')
+    return X, y
+
+def get_x_y_adult():
+    project_root = Path(__file__).parent.parent
+    y_col_name = 'y'
+    columns = ['age', 'workclass', 'fnlwgt', 'education', 'education_num', 'marital_status', 'occupation',
+               'relationship', 'race', 'sex', 'capital_gain', 'capital_loss'
+        , 'hours_per_week', 'native_country', 'y']
+
+    train = read_csv(project_root / "datasets/adult/adult.data", header=None)
+    train.columns = columns
+    y = Series(factorize(train[y_col_name])[0])
+    X = train.drop(columns=[y_col_name])
+    for col in X.select_dtypes(include=['O']).columns.tolist():
+        X[col] = X[col].astype('category')
+
     return X, y
 
 # def create_x_y(regression=True):

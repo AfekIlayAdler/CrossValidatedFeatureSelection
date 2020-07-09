@@ -1,10 +1,11 @@
 class Leaf:
-    def __init__(self, prediction: float, stopping_criteria: str, n_examples: str, purity: float):
+    def __init__(self, prediction: float, stopping_criteria: str, n_examples: str, purity: float, classification_prediction = None):
         self.prediction = prediction
         self.stopping_criteria = stopping_criteria
         self.n_examples = n_examples
         self.purity = purity
         self.number = None
+        self.classification_prediction = classification_prediction
 
 
 class InternalNode:

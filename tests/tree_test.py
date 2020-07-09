@@ -1,8 +1,8 @@
 import time
 from pathlib import Path
 
-from numpy import random
-from pandas import read_csv
+from numpy import random, isnan
+from pandas import read_csv, Series
 
 from algorithms import CartRegressionTreeKFold, CartRegressionTree, TreeVisualizer, node_based_feature_importance
 from algorithms.Tree import FastCartRegressionTree, FastCartRegressionTreeKFold
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     KFOLD = True
     FAST = True
     DATA = 'SIMULATED_INCREASING_ORDER' # 'AMAZON' , 'AMAZON', 'BIKE_RANTAL', 'BOSTON'
-    MAX_DEPTH = 5
+    MAX_DEPTH = 3
     if FAST:
         model = FastCartRegressionTreeKFold if KFOLD else FastCartRegressionTree
     else:
@@ -42,4 +42,5 @@ if __name__ == "__main__":
     print(end - start)
     print(node_based_feature_importance(tree))
     tree_vis = TreeVisualizer()
+    print(Series(tree.predict(X, is_binned=True)).value_counts())
     tree_vis.plot(tree)

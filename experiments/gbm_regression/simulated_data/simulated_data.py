@@ -6,7 +6,7 @@ from pandas import read_csv, to_datetime, DataFrame, Series
 from experiments.config_object import Config
 from experiments.default_config import GBM_REGRESSORS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline, get_preprocessing_pipeline_only_cat
-from experiments.run_experiment import run_experiments
+from experiments.experiment_configurator import experiment_configurator
 
 """
 dataset from kaggle. contains both categorical and numerical features. ~11k samples
@@ -44,4 +44,4 @@ if __name__ == '__main__':
         columns_to_remove=[],
         get_x_y=get_x_y,
         preprocessing_pipeline=get_preprocessing_pipeline) #  get_preprocessing_pipeline
-    run_experiments(config)
+    experiment_configurator(config)

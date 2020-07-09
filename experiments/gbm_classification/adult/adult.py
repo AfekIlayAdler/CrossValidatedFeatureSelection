@@ -5,7 +5,7 @@ from pandas import read_csv, factorize, Series
 from experiments.config_object import Config
 from experiments.default_config import GBM_CLASSIFIERS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_cat, get_preprocessing_pipeline
-from experiments.run_experiment import run_experiments
+from experiments.experiment_configurator import experiment_configurator
 
 
 def get_x_y():
@@ -21,12 +21,15 @@ def get_x_y():
     X = train.drop(columns=[y_col_name])
     for col in X.select_dtypes(include=['O']).columns.tolist():
         X[col] = X[col].astype('category')
+
     return X, y
 
 
 if __name__ == '__main__':
     config = Config(
-        compute_permutation=True,
+        kfold_flag=False,
+        drop_one_feature_flag=True,
+        compute_permutation=False,
         save_results=True,
         one_hot=True,
         contains_num_features=True,
@@ -35,4 +38,4 @@ if __name__ == '__main__':
         columns_to_remove=[],
         get_x_y=get_x_y,
         preprocessing_pipeline=get_preprocessing_pipeline)
-    run_experiments(config)
+    experiment_configurator(config)

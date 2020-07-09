@@ -6,7 +6,7 @@ from pandas import read_csv
 from experiments.config_object import Config
 from experiments.default_config import GBM_CLASSIFIERS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_cat
-from experiments.run_experiment import run_experiments
+from experiments.experiment_configurator import experiment_configurator
 
 
 def get_x_y():
@@ -42,4 +42,4 @@ if __name__ == '__main__':
         get_x_y=get_x_y,
         preprocessing_pipeline=get_preprocessing_pipeline_only_cat,
     )
-    run_experiments(config)
+    experiment_configurator(config)

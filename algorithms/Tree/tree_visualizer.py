@@ -88,6 +88,10 @@ class TreeVisualizer:
             field = node.field if isinstance(node, InternalNode) else 'leaf'
             purity = round(node.purity, 2)  # if isinstance(node.node_data,InternalNode) else ''
             labeldict[node.number] = F"{node.number}_{field}\n{purity} \n{node.n_examples}"
+            if field == 'leaf':
+                prediction = round(node.prediction,4)
+                labeldict[node.number] = F"{labeldict[node.number]} \n {prediction}"
+
         pos = hierarchy_pos(g, 0)
         nx.draw(g, pos=pos, labels=labeldict, with_labels=True)
         plt.show()

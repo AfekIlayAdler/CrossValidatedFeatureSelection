@@ -5,7 +5,7 @@ from sklearn.datasets import load_boston
 from experiments.config_object import Config
 from experiments.default_config import GBM_REGRESSORS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_num, get_preprocessing_pipeline
-from experiments.run_experiment import run_experiments
+from experiments.experiment_configurator import experiment_configurator
 
 
 def get_x_y():
@@ -21,10 +21,12 @@ def get_x_y():
 
 
 if __name__ == '__main__':
-    WITH_INDEX = True
+    WITH_INDEX = False
     pipeline = get_preprocessing_pipeline if WITH_INDEX else get_preprocessing_pipeline_only_num
     config = Config(
-        compute_permutation=True,
+        kfold_flag=False,
+        drop_one_feature_flag=False,
+        compute_permutation=False,
         save_results=True,
         one_hot=False,
         contains_num_features=True,
@@ -33,4 +35,4 @@ if __name__ == '__main__':
         columns_to_remove=[],
         get_x_y=get_x_y,
         preprocessing_pipeline=pipeline)
-    run_experiments(config)
+    experiment_configurator(config)

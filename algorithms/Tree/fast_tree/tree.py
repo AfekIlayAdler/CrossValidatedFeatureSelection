@@ -3,7 +3,7 @@ from typing import List
 
 from numba import types
 from numba.typed import Dict
-from numpy import zeros, array, random, max, uint16, ones
+from numpy import zeros, array, random, max, uint16, ones, abs, sum
 from pandas import DataFrame, Series, concat
 
 from algorithms.Tree.fast_tree.bining import BinMapper
@@ -48,6 +48,7 @@ class BaseTree:
         self.num_cols = None
         self.cat_n_bins = None
         self.column_dtypes = None
+        self.classification_predictions = {}
 
     def calculate_impurity(self, y) -> float:
         return self.impurity(y)
@@ -83,7 +84,8 @@ class BaseTree:
                                                                                                        Leaf]:
         impurity = self.calculate_impurity(y)
         n_samples = X_C.shape[0] if X_C is not None else X_N.shape[0]
-        leaf = Leaf(y.mean(), "_", n_samples, impurity)
+        classification_prediction = sum(y)/sum(abs(y) * (2 - abs(y))) # for gradient boosting trees
+        leaf = Leaf(y.mean(), "_", n_samples, impurity, classification_prediction)
         is_leaf = (impurity == 0) or (n_samples <= self.min_samples_split) or (depth == self.max_depth)
         if is_leaf:
             return leaf
@@ -137,6 +139,7 @@ class BaseTree:
         self.root = self._grow_tree(X_cat, X_num, cat_grad_data, num_grad_data, y, 0)
         if isinstance(self.root, Leaf):
             self.n_leaves = 1
+            self.classification_predictions[self.root.prediction] = 0
         else:
             self.number_nodes_and_update_tree_data()
 
@@ -165,7 +168,8 @@ class BaseTree:
             next_level_nodes = []
             for node, node_data in level_nodes:  # only on internal nodes
                 if isinstance(node, NumericBinaryNode):
-                    left_indices = node_data[node.field] <= node.thr
+                    # TODO: check if it correct
+                    left_indices = node_data[node.field] < node.thr
                 else:
                     left_indices = node_data[node.field].apply(lambda x: True if x in node.left_values else False)
                 # right_indices = left_indices.apply()
@@ -207,6 +211,8 @@ class BaseTree:
                     self.features.append(-2)
                     self.children_left.append(-1)
                     self.children_right.append(-1)
+                    self.classification_predictions[node.prediction] = node.classification_prediction
+
                 self.node_impurity.append(node.purity)
                 self.n_node_samples.append(node.n_examples)
 

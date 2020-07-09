@@ -4,7 +4,7 @@ from sklearn.datasets import load_breast_cancer
 from experiments.config_object import Config
 from experiments.default_config import RF_CLASSIFIERS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_num
-from experiments.run_experiment import run_experiments
+from experiments.experiment_configurator import experiment_configurator
 
 """
 Simple classification, only numerical features
@@ -31,4 +31,4 @@ if __name__ == '__main__':
         columns_to_remove=[],
         get_x_y=get_x_y,
         preprocessing_pipeline=get_preprocessing_pipeline_only_num)
-    run_experiments(config)
+    experiment_configurator(config)

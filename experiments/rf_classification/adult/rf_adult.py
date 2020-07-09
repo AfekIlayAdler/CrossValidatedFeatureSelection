@@ -5,7 +5,7 @@ from pandas import read_csv, factorize, Series
 from experiments.config_object import Config
 from experiments.default_config import RF_REGRESSORS, RF_CLASSIFIERS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline
-from experiments.run_experiment import run_experiments
+from experiments.experiment_configurator import experiment_configurator
 
 
 def get_x_y():
@@ -37,4 +37,4 @@ if __name__ == '__main__':
         columns_to_remove=[],
         get_x_y=get_x_y,
         preprocessing_pipeline=get_preprocessing_pipeline)
-    run_experiments(config)
+    experiment_configurator(config)

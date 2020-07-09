@@ -1,13 +1,17 @@
-from .Tree import Leaf, FastCartRegressionTreeKFold, FastCartRegressionTree, CartRegressionTree, \
-    CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
-
-from numpy import mean, array, log, exp, zeros, ones, sum, isnan
+from numpy import mean, array, log, exp, zeros, ones, unique
 from pandas import DataFrame
 
-from .gradient_boosting_abstract import GradientBoostingMachine
+from . import TreeVisualizer
+from .Tree import Leaf, FastCartRegressionTreeKFold, FastCartRegressionTree, CartRegressionTree, \
+    CartRegressionTreeKFold, MIN_SAMPLES_LEAF, MAX_DEPTH, MIN_IMPURITY_DECREASE, MIN_SAMPLES_SPLIT
 from .config import N_ESTIMATORS, LEARNING_RATE
+from .gradient_boosting_abstract import GradientBoostingMachine
 
 SUBSAMPLE = 1.
+
+
+def tree_n_unique_predictions(tree):
+    return len(unique(list(tree.classification_predictions.keys())))
 
 
 class GradientBoostingClassifier(GradientBoostingMachine):
@@ -52,6 +56,13 @@ class GradientBoostingClassifier(GradientBoostingMachine):
         gamma = zeros(n_rows)
         for index in range(n_rows):
             gamma[index] = predictions_to_step_size_dict[x[index]]
+
+        # if len(predictions_to_step_size_dict) != tree_n_unique_predictions(self.trees[-1]):
+        #     print(len(predictions_to_step_size_dict),self.trees[-1].n_leaves)
+        #     tree_vis = TreeVisualizer()
+        #     print(predictions_to_step_size_dict)
+        #     tree_vis.plot(self.trees[-1])
+        # assert len(predictions_to_step_size_dict) == tree_n_unique_predictions(self.trees[-1]), "line search map each leaf to a number"
         return gamma
 
     def fit(self, x, y):
@@ -65,6 +76,8 @@ class GradientBoostingClassifier(GradientBoostingMachine):
             pseudo_response = 2 * y / (1 + exp(2 * y * f))
             h_x = self.fit_tree(x, pseudo_response)
             gamma = self.line_search(h_x, pseudo_response)
+            assert len(self.predictions_to_step_size_dicts[-1]) == tree_n_unique_predictions(
+                self.trees[-1]), "line search map each leaf to a number"
             f += self.learning_rate * gamma
             self.n_trees += 1
 
@@ -72,11 +85,9 @@ class GradientBoostingClassifier(GradientBoostingMachine):
         prediction = ones(data.shape[0]) * self.base_prediction
         for tree_index, tree in enumerate(self.trees):
             tree_predictions = tree.predict(data, is_binned=self.bin_numeric_values)
-            # print(tree_index, sum(isnan(tree_predictions)))
             for i in range(tree_predictions.size):
                 tree_predictions[i] = self.predictions_to_step_size_dicts[tree_index].get(tree_predictions[i])
             prediction += self.learning_rate * tree_predictions
-            print(tree_index, sum(isnan(prediction)))
         return 1 / (1 + exp(-2 * prediction))
 
 

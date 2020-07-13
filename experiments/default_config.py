@@ -23,6 +23,10 @@ VAL_RATIO = 0.15
 Y_COL_NAME = 'y'
 N_ROWS = 10 ** 3
 
+SEED = 10
+KFOLDS = 10
+N_EXPERIMENTS = 10
+
 
 class Models:
     def __init__(self, is_gbm: bool, models_dict: Dict):

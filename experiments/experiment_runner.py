@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Tuple
 
+import yaml
 from numpy import nan, unique
 from pandas import Series, DataFrame
 from sklearn.metrics import log_loss
@@ -13,9 +14,6 @@ from experiments.utils import transform_categorical_features
 
 
 def run_experiment(config):
-    if config.exp_results_path.exists():
-        return
-
     X_train, X_test, y_train, y_test, original_dtypes = get_data(config)
     model = get_model(config, original_dtypes)
     model.fit(X_train, y_train)
@@ -25,16 +23,17 @@ def run_experiment(config):
                                                                      original_dtypes)
     logloss = get_log_loss(model, X_test, y_train, y_test)
     if config.save_results:
-        DataFrame(Series(
-            dict(model=f"{config.model_name}_{config.variant}",
-                 ntrees=model.get_n_trees(), nleaves=model.get_n_leaves(),
-                 error=model.compute_error(y_test, test_prediction), logloss=logloss,
-                 gain=model.compute_fi_gain().to_dict(),
-                 permutation_train=permutation_train, permutation_test=permutation_test,
-                 shap_train=model.compute_fi_shap(X_train, y_train).to_dict(),
-                 shap_test=model.compute_fi_shap(X_test, y_test).to_dict(),
-                 test_labels=y_test.values.tolist(), predictions=test_prediction)
-        )).T.to_csv(config.exp_results_path)
+        results_dict = dict(ntrees=int(model.get_n_trees()),
+                            nleaves=int(model.get_n_leaves()),
+                            error=float(model.compute_error(y_test, test_prediction)),
+                            logloss=float(logloss),
+                            gain=model.compute_fi_gain().to_dict(),
+                            permutation_train=permutation_train,
+                            permutation_test=permutation_test,
+                            shap_train=model.compute_fi_shap(X_train, y_train).to_dict(),
+                            shap_test=model.compute_fi_shap(X_test, y_test).to_dict())
+        with open(config.exp_results_path, 'w') as file:
+            documents = yaml.dump(results_dict, file)
 
 
 def get_data(config):

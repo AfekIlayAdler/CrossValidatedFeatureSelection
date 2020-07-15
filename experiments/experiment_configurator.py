@@ -72,8 +72,7 @@ def get_kfold_configuration(config, model_name, variant, exp_dir):
     for i, (train_index, test_index) in enumerate(kf.split(X)):
         config._set_attributes(
             exp_results_path=exp_dir / F"{model_name}_{variant}_{i}.yaml",
-            data=(X.iloc[train_index], X.iloc[test_index], y.iloc[train_index], y.iloc[test_index]),
-            compute_permutation=False)
+            data=(X.iloc[train_index], X.iloc[test_index], y.iloc[train_index], y.iloc[test_index]))
         yield config
 
 

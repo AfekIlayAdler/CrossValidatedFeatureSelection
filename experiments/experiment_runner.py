@@ -1,9 +1,6 @@
-from pathlib import Path
-from typing import Tuple
-
 import yaml
 from numpy import nan, unique
-from pandas import Series, DataFrame
+from pandas import Series
 from sklearn.metrics import log_loss
 
 from algorithms import LEARNING_RATE
@@ -76,7 +73,8 @@ def get_log_loss(model, X_test, y_train, y_test):
 
 
 def get_permutation_train_test(compute_permutation, model, X_train, y_train, X_test, y_test, original_dtypes):
-    permutation_train, permutation_test = [Series(0, index=original_dtypes) for _ in range(2)]
+    permutation_train = {col:0 for col in  original_dtypes.index}
+    permutation_test = permutation_train
     if compute_permutation:
         permutation_train = model.compute_fi_permutation(X_train, y_train).to_dict()
         permutation_test = model.compute_fi_permutation(X_test, y_test).to_dict()

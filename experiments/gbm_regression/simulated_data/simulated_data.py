@@ -9,23 +9,25 @@ from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_cat
 
 def get_x_y():
     X = DataFrame()
-    nrows = 10 ** 3
+    nrows = 10 ** 4
     y = Series(zeros(nrows))
-    for i in range(1, 7):
+    for i in range(1, 9):
         X[i] = random.randint(0, 2 ** i, nrows)
         X[i] = X[i].astype('category')
         y += X[i].isin(list(range(2 ** (i - 1)))) * 1
 
-    y += random.random(nrows)
+    # y += random.random(nrows)
+    # y += Series(y)
+    X.columns = [str(i) for i in X.columns]
     y = Series(random.random(nrows))
     return X, y
 
 
 if __name__ == '__main__':
-    MULTIPLE_EXPERIMENS = True
+    MULTIPLE_EXPERIMENTS = True
     KFOLD = False
     ONE_HOT = False
-    COMPUTE_PERMUTATION = True
+    COMPUTE_PERMUTATION = False
     CONTAINS_NUM_FEATURES = False
 
     REGRESSION = True
@@ -33,7 +35,7 @@ if __name__ == '__main__':
     predictors = GBM_REGRESSORS if REGRESSION else GBM_CLASSIFIERS
 
     config = Config(
-        multiple_experimens=MULTIPLE_EXPERIMENS,
+        multiple_experimens=MULTIPLE_EXPERIMENTS,
         n_experiments=N_EXPERIMENTS,
         kfold_flag=KFOLD,
         compute_permutation=COMPUTE_PERMUTATION,

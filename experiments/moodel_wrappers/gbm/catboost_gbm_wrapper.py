@@ -1,17 +1,16 @@
 from catboost import CatBoostRegressor, Pool, CatBoostClassifier
 from numpy import mean, array
-from numpy.random import permutation
 from pandas import Series, DataFrame
 
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
 from experiments.moodel_wrappers.wrapper_utils import normalize_series, get_shap_values, regression_error, \
-    classification_error
+    classification_error, permute_col
 from experiments.utils import get_categorical_col_indexes, get_categorical_colnames
 
 
 class CatboostGbmWrapper:
     def __init__(self, variant, dtypes, max_depth, n_estimators,
-                 learning_rate, subsample, model, compute_error):
+                 learning_rate, subsample, model):
         self.cat_col_indexes = get_categorical_col_indexes(dtypes)
         self.cat_col_names = get_categorical_colnames(dtypes)
         self.variant = variant
@@ -42,12 +41,14 @@ class CatboostGbmWrapper:
                 # TODO: remove plain
 
         self.x_train_cols = None
-        self.compute_error = compute_error
 
     def fit(self, X, y):
         self.x_train_cols = X.columns
         train_pool = Pool(X, y, cat_features=self.cat_col_indexes)
         self.predictor.fit(train_pool)
+
+    def compute_error(self, X, y):
+        return NotImplementedError
 
     def compute_fi_gain(self):
         # TODO: fix it
@@ -60,13 +61,13 @@ class CatboostGbmWrapper:
 
     def compute_fi_permutation(self, X, y):
         results = {}
-        true_error = self.compute_error(y, self.predict(X))
+        true_error = self.compute_error(X, y)
         for col in X.columns:
             permutated_x = X.copy()
             random_feature_mse = []
             for i in range(N_PERMUTATIONS):
-                permutated_x[col] = permutation(permutated_x[col])
-                random_feature_mse.append(self.compute_error(y, self.predict(permutated_x)))
+                permute_col(permutated_x, col)
+                random_feature_mse.append(self.compute_error(permutated_x, y))
             results[col] = mean(array(random_feature_mse)) - true_error
         fi = Series(results)
         return normalize_series(fi)
@@ -96,8 +97,10 @@ class CatboostGbmRegressorWrapper(CatboostGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model='regression',
-            compute_error=regression_error)
+            model='regression')
+
+    def compute_error(self, X, y):
+        return regression_error(y, self.predict(X))
 
 
 class CatboostGbmClassifierWrapper(CatboostGbmWrapper):
@@ -110,8 +113,10 @@ class CatboostGbmClassifierWrapper(CatboostGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model='classification',
-            compute_error=classification_error)
+            model='classification')
 
     def predict_proba(self, X: DataFrame):
         return self.predictor.predict_proba(self.get_pool(X))[:, 1]
+
+    def compute_error(self, X, y):
+        return classification_error(y, self.predict_proba(X))

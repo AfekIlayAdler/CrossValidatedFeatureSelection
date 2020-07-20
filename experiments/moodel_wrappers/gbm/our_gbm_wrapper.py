@@ -2,32 +2,34 @@ import multiprocessing
 from time import time
 
 from numpy import mean, array, nan
-from numpy.random import permutation
 from pandas import Series, DataFrame
 
 from algorithms import CartGradientBoostingRegressorKfold, CartGradientBoostingRegressor, \
     FastCartGradientBoostingRegressorKfold, FastCartGradientBoostingRegressor, CartGradientBoostingClassifier, \
     CartGradientBoostingClassifierKfold, FastCartGradientBoostingClassifier, FastCartGradientBoostingClassifierKfold
 from experiments.moodel_wrappers.models_config import N_PERMUTATIONS
-from experiments.moodel_wrappers.wrapper_utils import normalize_series, regression_error, classification_error
+from experiments.moodel_wrappers.wrapper_utils import normalize_series, regression_error, classification_error, \
+    permute_col
 
 
-def worker(X, y, col, predict, compute_error):
+def worker(X, y, col, compute_error):
     permutated_x = X.copy()
-    permutated_x[col] = permutation(permutated_x[col])
-    return compute_error(y, predict(permutated_x))
+    permute_col(permutated_x, col)
+    return compute_error(permutated_x, y)
 
 
 class OurGbmWrapper:
-    def __init__(self, max_depth, n_estimators, learning_rate, subsample, model, compute_error):
+    def __init__(self, max_depth, n_estimators, learning_rate, subsample, model):
         self.predictor = model(max_depth=max_depth, n_estimators=n_estimators,
                                learning_rate=learning_rate, subsample=subsample, min_samples_leaf=5)
         self.x_train_cols = None
-        self.compute_error = compute_error
 
     def fit(self, X, y):
         self.x_train_cols = X.columns
         self.predictor.fit(X, y)
+
+    def compute_error(self, X, y):
+        return NotImplementedError
 
     def compute_fi_gain(self):
         fi = Series(self.predictor.compute_feature_importance(method='gain'))
@@ -35,13 +37,13 @@ class OurGbmWrapper:
 
     def compute_fi_permutation(self, X, y):
         results = {col: 0 for col in self.x_train_cols}
-        true_error = self.compute_error(y, self.predict(X))
+        true_error = self.compute_error(X, y)
         # get only features that got positive fi_gain
         gain_fi = self.compute_fi_gain()
         positive_fi_gain = gain_fi[gain_fi > 0].index.tolist()
         for col in positive_fi_gain:
             start = time()
-            args = [(X, y, col, self.predict, self.compute_error) for _ in range(N_PERMUTATIONS)]
+            args = [(X, y, col, self.compute_error) for _ in range(N_PERMUTATIONS)]
 
             with multiprocessing.Pool(4) as process_pool:
                 prm_results = process_pool.starmap(worker, args)
@@ -73,8 +75,10 @@ class RegressionWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=model,
-            compute_error=regression_error)
+            model=model)
+
+    def compute_error(self, X, y):
+        return regression_error(y, self.predict(X))
 
 
 class ClassificationWrapper(OurGbmWrapper):
@@ -85,14 +89,16 @@ class ClassificationWrapper(OurGbmWrapper):
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             subsample=subsample,
-            model=model,
-            compute_error=classification_error)
+            model=model)
 
     def predict(self, X: DataFrame):
-        return (self.predictor.predict(X) > 0.5)*1
+        return (self.predictor.predict(X) > 0.5) * 1
 
     def predict_proba(self, X: DataFrame):
         return self.predictor.predict(X)
+
+    def compute_error(self, X, y):
+        return classification_error(y, self.predict_proba(X))
 
 
 class OurGbmRegressorWrapper(RegressionWrapper):

@@ -4,8 +4,9 @@ from pandas import read_csv
 
 from experiments.config_object import Config
 from experiments.default_config import GBM_CLASSIFIERS
-from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_cat, get_preprocessing_pipeline
+from experiments.default_config import GBM_REGRESSORS, N_EXPERIMENTS, SEED, KFOLDS
 from experiments.experiment_configurator import experiment_configurator
+from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_cat, get_preprocessing_pipeline
 
 
 def get_x_y():
@@ -20,14 +21,28 @@ def get_x_y():
 
 
 if __name__ == '__main__':
+    MULTIPLE_EXPERIMENTS = False
+    KFOLD = False
+    ONE_HOT = False
+    COMPUTE_PERMUTATION = True
+    CONTAINS_NUM_FEATURES = True
+
+    REGRESSION = False
+    pp = get_preprocessing_pipeline if CONTAINS_NUM_FEATURES else get_preprocessing_pipeline_only_cat
+    predictors = GBM_REGRESSORS if REGRESSION else GBM_CLASSIFIERS
     config = Config(
-        compute_permutation=True,
+        multiple_experimens=MULTIPLE_EXPERIMENTS,
+        n_experiments=N_EXPERIMENTS,
+        kfold_flag=KFOLD,
+        compute_permutation=COMPUTE_PERMUTATION,
         save_results=True,
-        one_hot=False,  # takes to much time
-        contains_num_features=True,
-        seed=7,
-        predictors=GBM_CLASSIFIERS,
-        columns_to_remove=['PurchDate', 'RefId'],
+        one_hot=ONE_HOT,
+        contains_num_features=CONTAINS_NUM_FEATURES,
+        seed=SEED,
+        kfolds=KFOLDS,
+        predictors=predictors,
+        columns_to_remove=[],
         get_x_y=get_x_y,
-        preprocessing_pipeline=get_preprocessing_pipeline)
+        preprocessing_pipeline=pp)
     experiment_configurator(config)
+

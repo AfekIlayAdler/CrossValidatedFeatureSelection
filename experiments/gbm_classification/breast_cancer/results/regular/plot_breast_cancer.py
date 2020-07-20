@@ -1,7 +1,7 @@
 from experiments.plot_utils import get_regular_paths, get_feature_importance, plot_fi, plot_metrics
 
 if __name__ == '__main__':
-    is_classification = False
+    is_classification = True
     metrics = ['ntrees', 'nleaves', 'error']
     if is_classification:
         metrics += ['logloss']

@@ -11,15 +11,16 @@ def get_x_y():
     X = DataFrame()
     nrows = 10 ** 4
     y = Series(zeros(nrows))
-    for i in range(1, 9):
-        X[i] = random.randint(0, 2 ** i, nrows)
-        X[i] = X[i].astype('category')
-        y += X[i].isin(list(range(2 ** (i - 1)))) * 1
+    for i in range(5, 10):
+        X[str(i)] = random.randint(0, 2 ** i, nrows)
+        X[str(i)] = X[str(i)].astype('category')
+        y += X[str(i)].isin(list(range(2 ** i - 1))) * 1
 
-    # y += random.random(nrows)
+    # X['numeric'] = random.random(nrows)*1
+    y += random.random(nrows)*1
     # y += Series(y)
-    X.columns = [str(i) for i in X.columns]
-    y = Series(random.random(nrows))
+    # X.columns = [str(i) for i in X.columns]
+    # y = Series(random.random(nrows))
     return X, y
 
 
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     MULTIPLE_EXPERIMENTS = True
     KFOLD = False
     ONE_HOT = False
-    COMPUTE_PERMUTATION = False
+    COMPUTE_PERMUTATION = True
     CONTAINS_NUM_FEATURES = False
 
     REGRESSION = True
@@ -36,7 +37,7 @@ if __name__ == '__main__':
 
     config = Config(
         multiple_experimens=MULTIPLE_EXPERIMENTS,
-        n_experiments=N_EXPERIMENTS,
+        n_experiments= 30 ,# N_EXPERIMENTS
         kfold_flag=KFOLD,
         compute_permutation=COMPUTE_PERMUTATION,
         save_results=True,

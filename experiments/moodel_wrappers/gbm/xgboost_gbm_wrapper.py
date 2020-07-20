@@ -45,6 +45,11 @@ class XgboostGbmWrapper:
         # TODO: fix it
         fi = self.predictor.get_score(importance_type='gain')
         fi = Series(self.group_fi(fi))
+        # xgboost doesn't always return all the columns he got in fit.
+        # https://www.kaggle.com/c/homesite-quote-conversion/discussion/18669
+        for col in self.x_train_cols:
+            if col not in fi.index:
+                fi[col] = 0
         return normalize_series(fi)
 
     def compute_fi_permutation(self, X, y):

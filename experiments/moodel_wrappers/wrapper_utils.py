@@ -1,11 +1,20 @@
 import shap
+from numpy.random import permutation
 from pandas import DataFrame
-from sklearn.metrics import mean_squared_error, f1_score
+from sklearn.metrics import mean_squared_error, log_loss
+
+
+def permute_col(df: DataFrame, col: str):
+    col_dtype = df[col].dtype
+    df[col] = permutation(df[col].values)
+    df[col] = df[col].astype(col_dtype)
+    col_doesnt_contains_nan = not df[col].isna().any()
+    assert col_doesnt_contains_nan, "permutated_x contain nan values"
 
 
 def normalize_series(s):
+    s = s.apply(lambda x: max(x, 0))
     if s.sum() != 0:
-        s = s.apply(lambda x: max(x,0))
         return s / s.sum()
     return s
 
@@ -23,5 +32,4 @@ def regression_error(y_true, y_pred):
 
 
 def classification_error(y_true, y_pred):
-    f1 = f1_score(y_true, (y_pred > 0.5) * 1)
-    return 1 - f1
+    return log_loss(y_true, y_pred)

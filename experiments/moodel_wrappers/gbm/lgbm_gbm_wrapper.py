@@ -182,8 +182,10 @@ class LgbmGbmWrapper:
             permutated_x = X.copy()
             random_feature_mse = []
             for i in range(N_PERMUTATIONS):
-                permutated_x[col] = Series(permutation(permutated_x[col]), dtype=X[col].dtype)
+                permutated_x[col] = permutation(X[col].values)
+                permutated_x[col] = permutated_x[col].astype(X[col].dtype)
                 random_feature_mse.append(self.compute_error(y, self.predict(permutated_x)))
+                assert not permutated_x[col].isna().any(), "permutated_x contain nan values"
             results[col] = mean(array(random_feature_mse)) - true_error
         fi = Series(self.group_fi(results))
         return normalize_series(fi)

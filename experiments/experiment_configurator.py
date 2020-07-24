@@ -8,7 +8,7 @@ from experiments.experiment_runner import run_experiment
 from experiments.utils import make_dirs
 
 
-def experiment_configurator(config):
+def experiment_configurator(config, interaction_configuration = False):
     models = get_variants(config.predictors.is_gbm, config.one_hot)
     start = time()
     make_dirs([config.results_dir])
@@ -19,7 +19,10 @@ def experiment_configurator(config):
         for variant in model_variants:
             config._set_attributes(model_name=model_name, variant=variant)
             seed(config.seed)
-            configurations = get_configurations(config, model_name, variant, exp_dir)
+            if interaction_configuration:
+                configurations = get_interaction_configuration(config, model_name, variant, exp_dir)
+            else:
+                configurations = get_configurations(config, model_name, variant, exp_dir)
             experiments_counter = 0
             for configuration in configurations:
                 experiments_counter += 1
@@ -74,3 +77,13 @@ def get_regular_configuration(config, model_name, variant, exp_dir):
         exp_results_path=exp_dir / F"{model_name}_{variant}.yaml",
         data=train_test_split(X, y, test_size=VAL_RATIO))
     yield config
+
+
+def get_interaction_configuration(config, model_name, variant, exp_dir):
+    for a in range(11):
+        for i in range(config.n_experiments):
+            X, y = config.get_x_y(a)
+            config._set_attributes(
+                exp_results_path=exp_dir / F"{model_name}_{variant}_{a}_{i}.yaml",
+                data=train_test_split(X, y, test_size=VAL_RATIO))
+            yield config

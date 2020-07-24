@@ -14,16 +14,13 @@ def run_experiment(config):
     X_train, X_test, y_train, y_test, original_dtypes = get_data(config)
     model = get_model(config, original_dtypes)
     model.fit(X_train, y_train)
-    test_prediction = model.predict(X_test)
     permutation_train, permutation_test = get_permutation_train_test(config.compute_permutation,
                                                                      model, X_train, y_train, X_test, y_test,
                                                                      original_dtypes)
-    logloss = get_log_loss(model, X_test, y_train, y_test)
     if config.save_results:
         results_dict = dict(ntrees=int(model.get_n_trees()),
                             nleaves=int(model.get_n_leaves()),
-                            error=float(model.compute_error(y_test, test_prediction)),
-                            logloss=float(logloss),
+                            error=float(model.compute_error(X_test, y_test)),
                             gain=model.compute_fi_gain().to_dict(),
                             permutation_train=permutation_train,
                             permutation_test=permutation_test,
@@ -66,15 +63,9 @@ def bin_numeric_features(x_train, x_test, contains_num_features):
     return x_train, x_test
 
 
-def get_log_loss(model, X_test, y_train, y_test):
-    if len(unique(y_train)) == 2:
-        return log_loss(y_test, model.predict_proba(X_test))
-    return nan
-
-
 def get_permutation_train_test(compute_permutation, model, X_train, y_train, X_test, y_test, original_dtypes):
-    permutation_train = {col:0 for col in  original_dtypes.index}
-    permutation_test = permutation_train
+    permutation_train = {col: 0 for col in original_dtypes.index}
+    permutation_test = {col: 0 for col in original_dtypes.index}
     if compute_permutation:
         permutation_train = model.compute_fi_permutation(X_train, y_train).to_dict()
         permutation_test = model.compute_fi_permutation(X_test, y_test).to_dict()

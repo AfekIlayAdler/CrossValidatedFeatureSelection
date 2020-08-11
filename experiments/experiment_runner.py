@@ -1,7 +1,4 @@
 import yaml
-from numpy import nan, unique
-from pandas import Series
-from sklearn.metrics import log_loss
 
 from algorithms import LEARNING_RATE
 from algorithms.Tree.fast_tree.bining import BinMapper

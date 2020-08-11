@@ -54,7 +54,7 @@ class SklearnGbmWrapper:
                 permute_col(permutated_x, col)
                 random_feature_mse.append(self.compute_error(permutated_x, y))
             results[col] = mean(array(random_feature_mse)) - true_error
-        fi = Series(results)
+        fi = Series(self.group_fi(results))
         return normalize_series(fi)
 
     def predict(self, X: DataFrame):

@@ -8,6 +8,7 @@ from .gradients import HISTOGRAM_DTYPE, _compute_grad_count_and_sum, grad_subtra
 gets the best split for each col. regular or kfold
 returns [validation_purity, purity, split_index] and left_values if cat col
 """
+KFOLDS= 5
 
 
 @njit(cache=True)
@@ -98,9 +99,9 @@ def _get_numeric_node_kfold(splitter, X, grad, grad_sums, y, is_regression):
     n_rows = X.size
     validation_error = 0
     random_permutation = get_random_permutation(n_rows)
-    validation_n_rows = n_rows // 5
-    for i in prange(5):
-        if i != 4:
+    validation_n_rows = n_rows // KFOLDS
+    for i in prange(KFOLDS):
+        if i != KFOLDS -1:
             validation_indices = random_permutation[i*validation_n_rows:(i +1)*validation_n_rows]
         else:
             validation_indices = random_permutation[i*validation_n_rows:]
@@ -124,9 +125,9 @@ def _get_categorical_node_kfold(splitter, X, grad, grad_sums, y, cat_n_bins, is_
     n_rows = X.size
     validation_error = 0
     random_permutation = get_random_permutation(n_rows)
-    validation_n_rows = n_rows // 5
-    for i in prange(5):
-        if i != 4:
+    validation_n_rows = n_rows // KFOLDS
+    for i in prange(KFOLDS):
+        if i != KFOLDS -1:
             validation_indices = random_permutation[i*validation_n_rows:(i +1)*validation_n_rows]
         else:
             validation_indices = random_permutation[i*validation_n_rows:]

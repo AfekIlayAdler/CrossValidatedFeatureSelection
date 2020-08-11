@@ -13,9 +13,9 @@ def permute_col(df: DataFrame, col: str):
 
 
 def normalize_series(s):
-    s = s.apply(lambda x: max(x, 0))
-    if s.sum() != 0:
-        return s / s.sum()
+    # s = s.apply(lambda x: max(x, 0))
+    # if s.sum() != 0:
+    #     return s / s.sum()
     return s
 
 

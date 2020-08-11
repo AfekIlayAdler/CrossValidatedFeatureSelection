@@ -2,6 +2,7 @@ from pathlib import Path
 
 from pandas import read_csv
 
+from algorithms.Tree.utils import get_num_cols
 from experiments.config_object import Config
 from experiments.default_config import GBM_CLASSIFIERS, GBM_REGRESSORS, N_EXPERIMENTS, SEED, KFOLDS
 from experiments.experiment_configurator import experiment_configurator
@@ -13,7 +14,7 @@ def get_x_y():
     y_col_name = 'ACTION'
     train = read_csv(project_root / 'datasets/amazon_from_catboost_paper/train.csv')
     y = train[y_col_name]
-    X = train.drop(columns=[y_col_name])
+    X = train.drop(columns=[y_col_name, 'RESOURCE'])
     for col in X.columns:
         X[col] = X[col].astype('category')
     return X, y
@@ -25,8 +26,11 @@ if __name__ == '__main__':
     ONE_HOT = False
     COMPUTE_PERMUTATION = True
     CONTAINS_NUM_FEATURES = False
+    RESULTS_DIR = Path("30foldCV_new_no_resource/")
 
     REGRESSION = False
+    x, y = get_x_y()
+    contains_num_features = len(get_num_cols(x.dtypes)) > 0
     pp = get_preprocessing_pipeline if CONTAINS_NUM_FEATURES else get_preprocessing_pipeline_only_cat
     predictors = GBM_REGRESSORS if REGRESSION else GBM_CLASSIFIERS
     config = Config(
@@ -36,11 +40,12 @@ if __name__ == '__main__':
         compute_permutation=COMPUTE_PERMUTATION,
         save_results=True,
         one_hot=ONE_HOT,
-        contains_num_features=CONTAINS_NUM_FEATURES,
+        contains_num_features=contains_num_features,
         seed=SEED,
-        kfolds=KFOLDS,
+        kfolds=30,
         predictors=predictors,
         columns_to_remove=[],
         get_x_y=get_x_y,
+        results_dir=RESULTS_DIR,
         preprocessing_pipeline=pp)
     experiment_configurator(config)

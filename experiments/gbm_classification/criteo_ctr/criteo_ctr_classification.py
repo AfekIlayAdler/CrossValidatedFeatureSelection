@@ -2,6 +2,7 @@ from pathlib import Path
 
 from pandas import read_csv
 
+from algorithms.Tree.utils import get_num_cols
 from experiments.config_object import Config
 from experiments.default_config import GBM_CLASSIFIERS, GBM_REGRESSORS, N_EXPERIMENTS, SEED, KFOLDS
 from experiments.preprocess_pipelines import get_preprocessing_pipeline_only_cat, get_preprocessing_pipeline
@@ -11,9 +12,9 @@ from experiments.experiment_configurator import experiment_configurator
 def get_x_y():
     project_root = Path(__file__).parent.parent.parent.parent
     y_col_name = 'click'
-    train = read_csv(project_root / 'datasets/criteo_ctr_prediction/train_10000.csv')
+    train = read_csv(project_root / 'datasets/criteo_ctr_prediction/train_30k.csv')
     y = train[y_col_name]
-    X = train.drop(columns=[y_col_name, 'hour', 'id', 'Unnamed: 0'])
+    X = train.drop(columns=[y_col_name, 'id', 'Unnamed: 0', 'device_ip', 'device_id', 'device_model']) #  'device_ip', 'device_id', 'device_model'
     for col in X.columns:
         X[col] = X[col].astype('category')
     return X, y
@@ -24,10 +25,12 @@ if __name__ == '__main__':
     KFOLD = True
     ONE_HOT = False
     COMPUTE_PERMUTATION = True
-    CONTAINS_NUM_FEATURES = False
+    RESULTS_DIR = Path("30FoldCV_30k_no_device_ip_id_model/")
 
     REGRESSION = False
-    pp = get_preprocessing_pipeline if CONTAINS_NUM_FEATURES else get_preprocessing_pipeline_only_cat
+    x, y = get_x_y()
+    contains_num_features = len(get_num_cols(x.dtypes)) > 0
+    pp = get_preprocessing_pipeline if contains_num_features else get_preprocessing_pipeline_only_cat
     predictors = GBM_REGRESSORS if REGRESSION else GBM_CLASSIFIERS
     config = Config(
         multiple_experimens=MULTIPLE_EXPERIMENTS,
@@ -36,11 +39,12 @@ if __name__ == '__main__':
         compute_permutation=COMPUTE_PERMUTATION,
         save_results=True,
         one_hot=ONE_HOT,
-        contains_num_features=CONTAINS_NUM_FEATURES,
+        contains_num_features=contains_num_features,
         seed=SEED,
-        kfolds=KFOLDS,
+        kfolds=30,
         predictors=predictors,
         columns_to_remove=[],
         get_x_y=get_x_y,
+        results_dir=RESULTS_DIR,
         preprocessing_pipeline=pp)
     experiment_configurator(config)

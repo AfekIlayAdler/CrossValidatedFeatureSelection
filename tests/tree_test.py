@@ -14,7 +14,7 @@ from tests.get_xy import create_x_y
 if __name__ == "__main__":
     KFOLD = True
     FAST = True
-    DATA = 'SIMULATED_INCREASING_ORDER' #  , 'AMAZON', 'BIKE_RANTAL', 'BOSTON'
+    DATA = 'SIMULATED_INCREASING_ORDER'  # , 'AMAZON', 'BIKE_RANTAL', 'BOSTON'
     MAX_DEPTH = 3
     if FAST:
         model = FastCartRegressionTreeKFold if KFOLD else FastCartRegressionTree

@@ -1,5 +1,6 @@
 from time import time
 
+from numpy.ma import arange
 from numpy.random import seed
 from sklearn.model_selection import train_test_split, KFold
 
@@ -10,6 +11,7 @@ from experiments.utils import make_dirs
 
 def experiment_configurator(config, interaction_configuration = False):
     models = get_variants(config.predictors.is_gbm, config.one_hot)
+    # models = dict(catboost=['vanilla'],  lgbm=['vanilla'])
     start = time()
     make_dirs([config.results_dir])
     for model_name, model_variants in models.items():
@@ -81,6 +83,7 @@ def get_regular_configuration(config, model_name, variant, exp_dir):
 
 def get_interaction_configuration(config, model_name, variant, exp_dir):
     for a in range(11):
+    # for a in arange(8,10.5,0.5):5
         for i in range(config.n_experiments):
             X, y = config.get_x_y(a)
             config._set_attributes(

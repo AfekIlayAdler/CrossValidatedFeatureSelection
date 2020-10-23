@@ -138,10 +138,12 @@ class LgbmGbmWrapper:
                 learning_rate=learning_rate,
                 max_depth=max_depth,
                 importance_type='gain',
+                n_estimators= self.n_estimators,
                 bagging_freq=1,
                 bagging_fraction=subsample)
         else:
             self.predictor = model(
+                n_estimators=self.n_estimators,
                 learning_rate=learning_rate,
                 max_depth=max_depth,
                 importance_type='gain')
